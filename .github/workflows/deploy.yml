@@ -1,0 +1,82 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches:
+      - main        # 部署到生產環境
+      - develop     # 部署到開發環境
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Deploy to Cloudflare Pages (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: line-bot-pusher
+          directory: ./
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Cloudflare Pages (Development)
+        if: github.ref == 'refs/heads/develop'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: line-bot-pusher-dev
+          directory: ./
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Worker (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          environment: production
+          secrets: |
+            LINE_CHANNEL_ACCESS_TOKEN
+            LINE_CHANNEL_SECRET
+            LINE_CHANNEL_ID
+            API_SECRET_KEY
+            JWT_SECRET
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          LINE_CHANNEL_ID: ${{ secrets.LINE_CHANNEL_ID }}
+          API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Deploy Worker (Development)
+        if: github.ref == 'refs/heads/develop'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          environment: development
