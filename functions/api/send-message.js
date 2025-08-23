@@ -219,7 +219,7 @@ async function sendToLine(env, groupId, message) {
     const lineResponse = await fetch('https://api.line.me/v2/bot/message/push', {
       method: 'POST',
       headers: {
-        'Authorization': \`Bearer \${env.CHANNEL_ACCESS_TOKEN}\`,
+        'Authorization': `Bearer ${env.CHANNEL_ACCESS_TOKEN}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
