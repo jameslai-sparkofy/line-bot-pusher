@@ -1,9 +1,10 @@
-# Cloudflare Workers 配置
+# Cloudflare Pages 配置
 name = "line-bot-pusher"
-compatibility_date = "2024-08-23"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
-# Worker 類型
-main = "src/worker.js"
+# Pages 配置
+pages_build_output_dir = "deploy"
 
 # 環境變數
 [env.production.vars]
@@ -13,11 +14,11 @@ MAX_PUSH_RATE = "1000"
 MAX_MESSAGE_LENGTH = "2000"
 LOG_LEVEL = "info"
 
-# KV 存儲 (用於存儲群組和模板資料)
-[[env.production.kv_namespaces]]
-binding = "LINE_BOT_KV"
-id = ""
-preview_id = ""
+# KV 存儲 (暫時移除，主要使用 D1)
+# [[env.production.kv_namespaces]]
+# binding = "LINE_BOT_KV"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
 
 # D1 資料庫 (Cloudflare 的 SQLite)
 [[env.production.d1_databases]]
@@ -25,15 +26,21 @@ binding = "LINE_BOT_DB"
 database_name = "line-bot-database"
 database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+# 全域 D1 資料庫配置
 [[d1_databases]]
 binding = "DB"
 database_name = "line-bot-database"
 database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 
-# 開發環境
-[env.development.vars]
-NODE_ENV = "development"
-PORT = "3000"
+# 預覽環境 (對應 Pages 的 preview)
+[env.preview.vars]
+NODE_ENV = "preview"
+PORT = "8787"
 MAX_PUSH_RATE = "500"
 MAX_MESSAGE_LENGTH = "2000"
 LOG_LEVEL = "debug"

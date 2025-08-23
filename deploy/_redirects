@@ -1,0 +1,4 @@
+/admin/* /functions/admin 200
+/api/* /functions/api 200
+/webhook /functions/webhook 200
+/health /functions/health 200

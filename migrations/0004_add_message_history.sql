@@ -16,7 +16,3 @@ CREATE TABLE IF NOT EXISTS message_history (
 CREATE INDEX IF NOT EXISTS idx_message_history_template_id ON message_history(template_id);
 CREATE INDEX IF NOT EXISTS idx_message_history_group_id ON message_history(group_id);
 CREATE INDEX IF NOT EXISTS idx_message_history_sent_at ON message_history(sent_at);
-
--- 新增 created_at 和 updated_at 欄位到 message_templates 表 (如果不存在)
-ALTER TABLE message_templates ADD COLUMN created_at DATETIME DEFAULT (datetime('now'));
-ALTER TABLE message_templates ADD COLUMN updated_at DATETIME DEFAULT (datetime('now'));
