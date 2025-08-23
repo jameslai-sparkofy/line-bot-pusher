@@ -202,7 +202,7 @@ async function sendToLine(env, groupId, message) {
   try {
     // 檢查群組是否存在
     const groupStmt = env.DB.prepare(`
-      SELECT group_id, group_name FROM groups 
+      SELECT group_id, group_name FROM line_groups 
       WHERE group_id = ? AND is_active = 1
     `);
     
