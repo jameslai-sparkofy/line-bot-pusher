@@ -23,7 +23,12 @@ preview_id = ""
 [[env.production.d1_databases]]
 binding = "LINE_BOT_DB"
 database_name = "line-bot-database"
-database_id = ""
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 
 # 開發環境
 [env.development.vars]
