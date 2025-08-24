@@ -216,6 +216,7 @@ export async function onRequest(context) {
             <button class="nav-tab" onclick="showTab('groups')">👨‍👩‍👧‍👦 群組管理</button>
             <button class="nav-tab" onclick="showTab('messages')">💬 訊息記錄</button>
             <button class="nav-tab" onclick="showTab('events')">📊 事件日誌</button>
+            <button class="nav-tab" onclick="showTab('templates')">📝 模板管理</button>
             <button class="nav-tab" onclick="showTab('quota')">📈 用量監控</button>
         </div>
         
@@ -311,6 +312,30 @@ export async function onRequest(context) {
                             </tr>
                         </thead>
                         <tbody id="events-table">
+                            <!-- 動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 模板管理 -->
+            <div id="templates-tab" class="tab-content">
+                <div class="section">
+                    <h3>Flex Message 模板管理</h3>
+                    <button class="btn" onclick="loadFlexTemplates()">🔄 重新載入</button>
+                    <button class="btn btn-success" onclick="window.open('/flex-editor', '_blank')" style="margin-left: 10px;">➕ 新增模板</button>
+                    <table class="table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>模板名稱</th>
+                                <th>類型</th>
+                                <th>類別</th>
+                                <th>使用次數</th>
+                                <th>建立時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="flex-templates-table">
                             <!-- 動態載入 -->
                         </tbody>
                     </table>
@@ -414,6 +439,7 @@ export async function onRequest(context) {
                 case 'groups': loadGroups(); break;
                 case 'messages': loadMessages(); break;
                 case 'events': loadEvents(); break;
+                case 'templates': loadFlexTemplates(); break;
                 case 'quota': loadQuota(); break;
             }
         }
@@ -647,6 +673,66 @@ export async function onRequest(context) {
                 }
             } catch (error) {
                 alert('保存出錯：' + error.message);
+            }
+        }
+
+        // 載入 Flex 模板列表
+        async function loadFlexTemplates() {
+            try {
+                const response = await fetch('/api/flex-templates');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                const tbody = document.getElementById('flex-templates-table');
+                tbody.innerHTML = data.templates.map(template => \`
+                    <tr>
+                        <td><strong>\${template.template_name}</strong><br><small style="color: #666;">\${template.description || '無描述'}</small></td>
+                        <td><span class="status status-active">\${template.template_type}</span></td>
+                        <td>\${template.category}</td>
+                        <td><span class="status status-active">\${template.usage_count || 0} 次</span></td>
+                        <td>\${new Date(template.created_at).toLocaleString('zh-TW')}</td>
+                        <td>
+                            <button class="btn btn-small" onclick="window.open('/flex-editor?id=\${template.template_id}', '_blank')">✏️ 編輯</button>
+                            <button class="btn btn-small btn-success" onclick="previewFlexTemplate('\${template.template_id}')">👁️ 預覽</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteFlexTemplate('\${template.template_id}')">🗑️ 刪除</button>
+                        </td>
+                    </tr>
+                \`).join('');
+            } catch (error) {
+                console.error('載入 Flex 模板失敗:', error);
+                const tbody = document.getElementById('flex-templates-table');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">載入失敗：' + error.message + '</td></tr>';
+            }
+        }
+
+        // 預覽 Flex 模板
+        function previewFlexTemplate(templateId) {
+            window.open('/flex-editor?id=' + templateId + '&preview=true', '_blank');
+        }
+
+        // 刪除 Flex 模板
+        async function deleteFlexTemplate(templateId) {
+            if (!confirm('確定要刪除此模板嗎？此操作無法恢復！')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/flex-templates/' + templateId, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('模板刪除成功！');
+                    loadFlexTemplates(); // 重新載入列表
+                } else {
+                    alert('刪除失敗：' + data.error);
+                }
+            } catch (error) {
+                alert('刪除出錯：' + error.message);
             }
         }
 
