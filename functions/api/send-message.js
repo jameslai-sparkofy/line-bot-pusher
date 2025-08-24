@@ -109,30 +109,49 @@ async function sendTemplateMessage(context, data) {
   // 發送到 LINE
   const result = await sendToLine(env, group_id, processedMessage);
   
-  if (!result.success) {
-    return jsonResponse(result, 500);
-  }
-
-  // 記錄發送歷史
+  // 生成訊息ID用於記錄
   const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   
+  // 記錄發送結果（成功或失敗都記錄）
   try {
-    const logStmt = env.DB.prepare(`
-      INSERT OR IGNORE INTO message_history 
+    // 1. 記錄到 push_logs (管理後台查詢)
+    const pushLogStmt = env.DB.prepare(`
+      INSERT INTO push_logs 
+      (group_id, template_id, message_content, status, error_message, sent_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `);
+    
+    await pushLogStmt.bind(
+      group_id,
+      template_id,
+      processedMessage,
+      result.success ? 'sent' : 'failed',
+      result.success ? null : result.error
+    ).run();
+
+    // 2. 記錄到 message_history (詳細歷史)
+    const historyStmt = env.DB.prepare(`
+      INSERT INTO message_history 
       (message_id, template_id, group_id, processed_message, variables_used, sent_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
 
-    await logStmt.bind(
+    await historyStmt.bind(
       messageId,
       template_id,
       group_id,
       processedMessage,
       JSON.stringify(variables)
     ).run();
+    
   } catch (logError) {
-    console.warn('Failed to log message history:', logError);
+    console.warn('Failed to log message:', logError);
   }
+  
+  if (!result.success) {
+    return jsonResponse(result, 500);
+  }
+
 
   return jsonResponse({
     success: true,
@@ -162,29 +181,47 @@ async function sendDirectMessage(context, data) {
   // 發送到 LINE
   const result = await sendToLine(env, group_id, message);
   
-  if (!result.success) {
-    return jsonResponse(result, 500);
-  }
-
   // 記錄發送歷史
   const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   
+  // 記錄到兩個表格（成功或失敗都記錄）
   try {
-    const logStmt = env.DB.prepare(`
-      INSERT OR IGNORE INTO message_history 
+    // 1. 記錄到 push_logs (管理後台查詢)
+    const pushLogStmt = env.DB.prepare(`
+      INSERT INTO push_logs 
+      (group_id, template_id, message_content, status, error_message, sent_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `);
+    
+    await pushLogStmt.bind(
+      group_id,
+      'direct_message',
+      message,
+      result.success ? 'sent' : 'failed',
+      result.success ? null : result.error
+    ).run();
+
+    // 2. 記錄到 message_history (詳細歷史)
+    const historyStmt = env.DB.prepare(`
+      INSERT INTO message_history 
       (message_id, template_id, group_id, processed_message, variables_used, sent_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
 
-    await logStmt.bind(
+    await historyStmt.bind(
       messageId,
       'direct_message',
       group_id,
       message,
       '{}'
     ).run();
+    
   } catch (logError) {
-    console.warn('Failed to log message history:', logError);
+    console.warn('Failed to log message:', logError);
+  }
+
+  if (!result.success) {
+    return jsonResponse(result, 500);
   }
 
   return jsonResponse({
