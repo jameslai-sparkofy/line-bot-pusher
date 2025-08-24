@@ -14,6 +14,11 @@ MAX_PUSH_RATE = "1000"
 MAX_MESSAGE_LENGTH = "2000"
 LOG_LEVEL = "info"
 
+# R2 存儲配置 (生產環境)
+[[env.production.r2_buckets]]
+bucket_name = "line-bot-images"
+binding = "R2_IMAGES"
+
 # KV 存儲 (暫時移除，主要使用 D1)
 # [[env.production.kv_namespaces]]
 # binding = "LINE_BOT_KV"
@@ -36,6 +41,11 @@ database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 binding = "DB"
 database_name = "line-bot-database"
 database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+# R2 存儲配置
+[[r2_buckets]]
+bucket_name = "line-bot-images"
+binding = "R2_IMAGES"
 
 # 預覽環境 (對應 Pages 的 preview)
 [env.preview.vars]

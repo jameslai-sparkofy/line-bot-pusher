@@ -217,6 +217,7 @@ export async function onRequest(context) {
             <button class="nav-tab" onclick="showTab('messages')">💬 訊息記錄</button>
             <button class="nav-tab" onclick="showTab('events')">📊 事件日誌</button>
             <button class="nav-tab" onclick="showTab('templates')">📝 模板管理</button>
+            <button class="nav-tab" onclick="showTab('projects')">🏢 建案管理</button>
             <button class="nav-tab" onclick="showTab('quota')">📈 用量監控</button>
         </div>
         
@@ -323,7 +324,9 @@ export async function onRequest(context) {
                 <div class="section">
                     <h3>Flex Message 模板管理</h3>
                     <button class="btn" onclick="loadFlexTemplates()">🔄 重新載入</button>
-                    <button class="btn btn-success" onclick="window.open('/flex-editor', '_blank')" style="margin-left: 10px;">➕ 新增模板</button>
+                    <button class="btn btn-success" onclick="window.open('/flex-carousel-editor', '_blank')" style="margin-left: 10px;">🏗️ 房地產編輯器</button>
+                    <button class="btn" onclick="window.open('/flex-simple-editor', '_blank')" style="margin-left: 10px;">🎨 簡易編輯</button>
+                    <button class="btn" onclick="window.open('/flex-editor', '_blank')" style="margin-left: 10px;">📝 JSON 編輯</button>
                     <table class="table" style="margin-top: 20px;">
                         <thead>
                             <tr>
@@ -336,6 +339,31 @@ export async function onRequest(context) {
                             </tr>
                         </thead>
                         <tbody id="flex-templates-table">
+                            <!-- 動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 建案管理 -->
+            <div id="projects-tab" class="tab-content">
+                <div class="section">
+                    <h3>建案管理</h3>
+                    <button class="btn" onclick="loadProjects()">🔄 重新載入</button>
+                    <button class="btn btn-success" onclick="addNewProject()" style="margin-left: 10px;">➕ 新增建案</button>
+                    <table class="table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>建案名稱</th>
+                                <th>地點</th>
+                                <th>總戶數</th>
+                                <th>棟數</th>
+                                <th>聯絡電話</th>
+                                <th>建立時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table">
                             <!-- 動態載入 -->
                         </tbody>
                     </table>
@@ -440,6 +468,7 @@ export async function onRequest(context) {
                 case 'messages': loadMessages(); break;
                 case 'events': loadEvents(); break;
                 case 'templates': loadFlexTemplates(); break;
+                case 'projects': loadProjects(); break;
                 case 'quota': loadQuota(); break;
             }
         }
@@ -695,7 +724,9 @@ export async function onRequest(context) {
                         <td><span class="status status-active">\${template.usage_count || 0} 次</span></td>
                         <td>\${new Date(template.created_at).toLocaleString('zh-TW')}</td>
                         <td>
-                            <button class="btn btn-small" onclick="window.open('/flex-editor?id=\${template.template_id}', '_blank')">✏️ 編輯</button>
+                            <button class="btn btn-small" onclick="window.open('/flex-carousel-editor?id=\${template.template_id}', '_blank')">🏗️ 房地產</button>
+                            <button class="btn btn-small" onclick="window.open('/flex-simple-editor?id=\${template.template_id}', '_blank')">🎨 簡易</button>
+                            <button class="btn btn-small" onclick="window.open('/flex-editor?id=\${template.template_id}', '_blank')">📝 JSON</button>
                             <button class="btn btn-small btn-success" onclick="previewFlexTemplate('\${template.template_id}')">👁️ 預覽</button>
                             <button class="btn btn-small btn-danger" onclick="deleteFlexTemplate('\${template.template_id}')">🗑️ 刪除</button>
                         </td>
@@ -734,6 +765,120 @@ export async function onRequest(context) {
             } catch (error) {
                 alert('刪除出錯：' + error.message);
             }
+        }
+
+        // 載入建案列表
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                const tbody = document.getElementById('projects-table');
+                tbody.innerHTML = data.projects.map(project => \`
+                    <tr>
+                        <td><strong>\${project.project_name}</strong><br><small style="color: #666;">\${project.description || '無描述'}</small></td>
+                        <td>\${project.location || '未設定'}</td>
+                        <td><span class="status status-active">\${project.total_units || 0} 戶</span></td>
+                        <td><span class="status status-active">\${project.building_count || 0} 棟</span></td>
+                        <td>\${project.contact_phone || '未設定'}</td>
+                        <td>\${new Date(project.created_at).toLocaleString('zh-TW')}</td>
+                        <td>
+                            <button class="btn btn-small" onclick="editProject('\${project.project_id}')">✏️ 編輯</button>
+                            <button class="btn btn-small btn-success" onclick="viewProjectBuildings('\${project.project_id}')">🏢 棟別</button>
+                            <button class="btn btn-small" onclick="createProjectTemplate('\${project.project_id}')" style="background: #667eea;">📝 建立模板</button>
+                        </td>
+                    </tr>
+                \`).join('');
+            } catch (error) {
+                console.error('載入建案失敗:', error);
+                const tbody = document.getElementById('projects-table');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">載入失敗：' + error.message + '</td></tr>';
+            }
+        }
+
+        // 新增建案
+        function addNewProject() {
+            const projectName = prompt('請輸入建案名稱:');
+            if (!projectName) return;
+            
+            const location = prompt('請輸入建案地點:');
+            const totalUnits = prompt('請輸入總戶數:') || '0';
+            const contactPhone = prompt('請輸入聯絡電話:');
+            
+            // 收集棟別資料
+            const buildings = [];
+            let addMore = true;
+            let buildingIndex = 1;
+            
+            while (addMore) {
+                const buildingName = prompt(\`請輸入第 \${buildingIndex} 棟名稱 (如: A棟):\`);
+                if (!buildingName) break;
+                
+                const buildingUnits = prompt(\`請輸入 \${buildingName} 總戶數:\`) || '0';
+                const soldUnits = prompt(\`請輸入 \${buildingName} 已售戶數:\`) || '0';
+                const soldPercentage = Math.round((parseInt(soldUnits) / parseInt(buildingUnits)) * 100) + '%';
+                
+                buildings.push({
+                    building_name: buildingName,
+                    total_units: parseInt(buildingUnits),
+                    sold_units: parseInt(soldUnits),
+                    sold_percentage: soldPercentage
+                });
+                
+                buildingIndex++;
+                addMore = confirm('是否繼續新增棟別？');
+            }
+            
+            createProject({
+                project_name: projectName,
+                location: location,
+                total_units: parseInt(totalUnits),
+                contact_phone: contactPhone,
+                buildings: buildings
+            });
+        }
+
+        // 建立建案
+        async function createProject(projectData) {
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(projectData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('建案建立成功！\\n建案 ID: ' + result.project_id);
+                    loadProjects(); // 重新載入列表
+                } else {
+                    alert('建立失敗：' + result.error);
+                }
+            } catch (error) {
+                alert('建立出錯：' + error.message);
+            }
+        }
+
+        // 編輯建案
+        function editProject(projectId) {
+            // TODO: 實作建案編輯功能
+            alert('建案編輯功能開發中...');
+        }
+
+        // 檢視棟別詳情
+        function viewProjectBuildings(projectId) {
+            // TODO: 實作棟別管理功能
+            alert('棟別管理功能開發中...');
+        }
+
+        // 為建案建立模板
+        function createProjectTemplate(projectId) {
+            // 開啟房地產編輯器，並傳入建案 ID
+            window.open(\`/flex-carousel-editor?project=\${projectId}\`, '_blank');
         }
 
         // 頁面載入時初始化
