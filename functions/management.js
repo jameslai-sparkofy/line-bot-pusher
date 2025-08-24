@@ -435,7 +435,7 @@ export async function onRequest(context) {
                         <td><span class="status \${user.is_friend ? 'status-active' : 'status-inactive'}">\${user.is_friend ? '好友' : '已封鎖'}</span></td>
                         <td>\${new Date(user.created_at).toLocaleString('zh-TW')}</td>
                         <td>
-                            <button class="btn btn-small" onclick="editUser('\${user.user_id}', '\${user.note_name || ``}', '')">✏️ 編輯</button>
+                            <button class="btn btn-small" onclick="editUser('\${user.user_id}', '\${user.note_name || \"\"}', '')">✏️ 編輯</button>
                             <button class="btn btn-small btn-success" onclick="viewUserMessages('\${user.user_id}')">💬 訊息</button>
                         </td>
                     </tr>
@@ -463,7 +463,7 @@ export async function onRequest(context) {
                         <td><span class="status \${group.is_active ? 'status-active' : 'status-inactive'}">\${group.is_active ? '活躍' : '已離開'}</span></td>
                         <td>\${new Date(group.joined_at).toLocaleString('zh-TW')}</td>
                         <td>
-                            <button class="btn btn-small" onclick="editGroup('\${group.group_id}', '\${group.note_name || ``}', '\${group.department || ``}')">✏️ 編輯</button>
+                            <button class="btn btn-small" onclick="editGroup('\${group.group_id}', '\${group.note_name || \"\"}', '\${group.department || \"\"}')">✏️ 編輯</button>
                             <button class="btn btn-small btn-success" onclick="viewGroupMessages('\${group.group_id}')">💬 訊息</button>
                         </td>
                     </tr>
