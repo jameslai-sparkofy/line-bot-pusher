@@ -895,7 +895,7 @@ export async function onRequest(context) {
             const titleContent = body[0]; // 主標題（第一個元素）
             const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap); // 副標題（普通文字）
             const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm'); // 棟別box
-            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true); // 下方內容（有wrap的文字）
+            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa'); // 下方內容（有wrap的文字，但不是日期）
             const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs'); // 日期資訊（灰色小字）
             
             html += '<div class="form-section">';

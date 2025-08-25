@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
   
   try {
     console.log('導航到線上編輯器...');
-    await page.goto('https://46d566b2.line-bot-pusher.pages.dev/flex-carousel-editor', {
+    await page.goto('https://b0239bcf.line-bot-pusher.pages.dev/flex-carousel-editor', {
       waitUntil: 'networkidle',
       timeout: 15000
     });
