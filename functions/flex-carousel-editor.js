@@ -1437,6 +1437,7 @@ export async function onRequest(context) {
                 }
                 
                 // 日期資訊
+                const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
                 if (dateContent?.text) {
                     html += '<div style="font-size: 11px; color: #aaa; margin-top: 8px;">' + dateContent.text + '</div>';
                 }
