@@ -39,7 +39,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: line-bot-pusher
           directory: ./
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Cloudflare Pages (Development)
         if: github.ref == 'refs/heads/develop'
@@ -49,7 +48,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: line-bot-pusher-dev
           directory: ./
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Worker (Production)
         if: github.ref == 'refs/heads/main'
