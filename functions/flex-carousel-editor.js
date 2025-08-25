@@ -407,12 +407,9 @@ export async function onRequest(context) {
 <body>
     <!-- 頭部工具列 -->
     <div class="editor-header">
-        <div class="editor-title">🏗️ Flex Carousel 編輯器</div>
+        <div class="editor-title" id="editor-title" onclick="editTemplateTitle()" style="cursor: pointer;">🏗️ Flex Carousel 編輯器</div>
         <div class="editor-actions">
-            <button class="btn" onclick="loadProject()">📂 載入建案</button>
             <button class="btn" onclick="showJsonPreview()">📝 檢視 JSON</button>
-            <button class="btn" onclick="previewInNewWindow()">👁️ 預覽</button>
-            <button class="btn" onclick="saveTemplate()">💾 儲存模板</button>
             <button class="btn btn-primary" onclick="window.close()">✕ 關閉</button>
         </div>
     </div>
@@ -423,7 +420,10 @@ export async function onRequest(context) {
         <div class="template-panel">
             <div class="panel-header">
                 <div class="panel-title">📋 模板</div>
-                <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
+                    <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
+                </div>
             </div>
             <div class="template-list" id="template-list">
                 <!-- 動態載入模板列表 -->
@@ -619,6 +619,20 @@ export async function onRequest(context) {
             
             updateTabs();
             updatePreview();
+        }
+
+        // 編輯模板標題
+        function editTemplateTitle() {
+            if (templates.length === 0) return;
+            
+            const currentTemplate = templates[currentTemplateIndex];
+            const newName = prompt('請輸入新的模板名稱:', currentTemplate.name);
+            
+            if (newName && newName !== currentTemplate.name) {
+                currentTemplate.name = newName;
+                document.getElementById('editor-title').textContent = '📝 ' + newName;
+                renderTemplateList();
+            }
         }
 
         // 載入已儲存的模板
@@ -842,17 +856,15 @@ export async function onRequest(context) {
             html += '<div class="upload-status" id="uploadStatus" style="font-size: 12px; color: #666; margin-bottom: 5px;"></div>';
             html += '<img id="heroImagePreview" src="' + (bubble.hero?.url || '') + '" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 4px; display: ' + (bubble.hero?.url ? 'block' : 'none') + ';">';
             html += '</div>';
-            html += '<div class="form-group">';
-            html += '<label class="form-label">圖片連結</label>';
-            html += '<input type="url" class="form-input" value="' + (bubble.hero?.action?.uri || '') + '" onchange="updateHeroAction(this.value)" placeholder="點擊圖片時的連結">';
-            html += '</div>';
             html += '</div>';
             
             // 內容設定
             const body = bubble.body?.contents || [];
             const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
+            const subtitleContent = body.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs' && c !== titleContent);
             const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
             const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
+            const bottomContent = body.slice(-1).find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c !== dateContent);
             
             html += '<div class="form-section">';
             html += '<div class="section-title"><span class="section-icon">📝</span>內容設定</div>';
@@ -861,8 +873,16 @@ export async function onRequest(context) {
             html += '<input type="text" class="form-input" value="' + (titleContent?.text || '') + '" onchange="updateMainTitle(this.value)" placeholder="例：勝美 - 建功段">';
             html += '</div>';
             html += '<div class="form-group">';
+            html += '<label class="form-label">副標題</label>';
+            html += '<input type="text" class="form-input" value="' + (subtitleContent?.text || '') + '" onchange="updateSubtitle(this.value)" placeholder="例：台北市信義區">';
+            html += '</div>';
+            html += '<div class="form-group">';
             html += '<label class="form-label">日期資訊</label>';
             html += '<input type="text" class="form-input" value="' + (dateContent?.text || '') + '" onchange="updateDateInfo(this.value)" placeholder="例：2025-08-24 進度報告">';
+            html += '</div>';
+            html += '<div class="form-group">';
+            html += '<label class="form-label">下方內容</label>';
+            html += '<textarea class="form-textarea" onchange="updateBottomContent(this.value)" placeholder="例：工程進度說明或其他補充資訊">' + (bottomContent?.text || '') + '</textarea>';
             html += '</div>';
             html += '</div>';
             
@@ -876,7 +896,10 @@ export async function onRequest(context) {
                         const percentage = building.contents.find(c => c.type === 'text' && c.align === 'end')?.text || '';
                         
                         html += '<div class="form-group" style="border: 1px solid #e1e8ed; padding: 10px; margin-bottom: 10px; border-radius: 4px;">';
-                        html += '<label class="form-label">棟別 ' + (index + 1) + '</label>';
+                        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+                        html += '<label class="form-label" style="margin-bottom: 0;">棟別 ' + (index + 1) + '</label>';
+                        html += '<button type="button" class="template-delete-btn" onclick="removeBuilding(' + index + ')" style="font-size: 12px; padding: 2px 8px;">刪除</button>';
+                        html += '</div>';
                         html += '<div style="display: flex; gap: 10px;">';
                         html += '<input type="text" class="form-input" value="' + buildingName + '" onchange="updateBuildingName(' + index + ', this.value)" placeholder="例：A棟" style="flex: 1;">';
                         html += '<input type="text" class="form-input" value="' + percentage + '" onchange="updateBuildingPercentage(' + index + ', this.value)" placeholder="例：95%" style="flex: 1;">';
@@ -942,12 +965,19 @@ export async function onRequest(context) {
                     if (bubble.hero) {
                         bubble.hero.url = result.url;
                         templates[currentTemplateIndex].carouselData = carouselData;
-                        updatePreview();
                         
-                        preview.src = result.url;
-                        preview.style.display = 'block';
+                        // 更新預覽圖片
+                        if (preview) {
+                            preview.src = result.url;
+                            preview.style.display = 'block';
+                        }
+                        
                         statusDiv.textContent = '上傳成功';
                         statusDiv.style.color = '#28a745';
+                        
+                        // 重新載入表單內容和預覽
+                        loadTabContent();
+                        updatePreview();
                     }
                 } else {
                     statusDiv.textContent = '上傳失敗: ' + result.error;
@@ -968,15 +998,6 @@ export async function onRequest(context) {
             }
         }
 
-        function updateHeroAction(uri) {
-            const bubble = carouselData.contents[currentTabIndex];
-            if (bubble.hero) {
-                if (!bubble.hero.action) bubble.hero.action = { type: 'uri' };
-                bubble.hero.action.uri = uri;
-                templates[currentTemplateIndex].carouselData = carouselData;
-                updatePreview();
-            }
-        }
 
         // 更新主標題
         function updateMainTitle(text) {
@@ -1001,6 +1022,52 @@ export async function onRequest(context) {
             }
         }
 
+        // 更新副標題
+        function updateSubtitle(text) {
+            const bubble = carouselData.contents[currentTabIndex];
+            let subtitleContent = bubble.body.contents.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs');
+            
+            if (!subtitleContent && text) {
+                // 如果不存在副標題元素，在主標題後創建一個
+                const titleIndex = bubble.body.contents.findIndex(c => c.type === 'text' && c.weight === 'bold');
+                subtitleContent = {
+                    "type": "text",
+                    "text": text,
+                    "size": "sm",
+                    "color": "#666666",
+                    "margin": "sm"
+                };
+                bubble.body.contents.splice(titleIndex + 1, 0, subtitleContent);
+            } else if (subtitleContent) {
+                subtitleContent.text = text;
+            }
+            
+            templates[currentTemplateIndex].carouselData = carouselData;
+            updatePreview();
+        }
+
+        // 更新下方內容
+        function updateBottomContent(text) {
+            const bubble = carouselData.contents[currentTabIndex];
+            let bottomContent = bubble.body.contents.slice(-1).find(c => c.type === 'text');
+            
+            if (!bottomContent && text) {
+                // 如果不存在下方內容元素，在最後創建一個
+                bottomContent = {
+                    "type": "text",
+                    "text": text,
+                    "size": "sm",
+                    "wrap": true,
+                    "margin": "md"
+                };
+                bubble.body.contents.push(bottomContent);
+            } else if (bottomContent) {
+                bottomContent.text = text;
+            }
+            
+            templates[currentTemplateIndex].carouselData = carouselData;
+            updatePreview();
+        }
 
         // 更新棟別名稱
         function updateBuildingName(index, name) {
@@ -1116,6 +1183,20 @@ export async function onRequest(context) {
             templates[currentTemplateIndex].carouselData = carouselData;
             loadTabContent();
             updatePreview();
+        }
+
+        // 移除棟別
+        function removeBuilding(index) {
+            const bubble = carouselData.contents[currentTabIndex];
+            const buildingBox = bubble.body.contents.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
+            if (buildingBox?.contents?.[index]) {
+                if (confirm('確定要刪除這個棟別嗎？')) {
+                    buildingBox.contents.splice(index, 1);
+                    templates[currentTemplateIndex].carouselData = carouselData;
+                    loadTabContent();
+                    updatePreview();
+                }
+            }
         }
 
         // 移除按鈕
@@ -1324,6 +1405,8 @@ export async function onRequest(context) {
                     // 更新模板 ID
                     currentTemplate.id = result.template_id;
                     alert('模板儲存成功!');
+                    // 重新載入模板列表
+                    await loadTemplates();
                 } else {
                     alert('儲存失敗：' + result.error);
                 }
