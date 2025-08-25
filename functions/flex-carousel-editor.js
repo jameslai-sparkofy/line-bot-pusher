@@ -628,7 +628,7 @@ export async function onRequest(context) {
             
             // 如果沒有模板，建立第一個預設模板
             if (templates.length === 0) {
-                addNewTemplate();
+                createDefaultTemplate();
             } else {
                 selectTemplate(0);
             }
@@ -815,6 +815,32 @@ export async function onRequest(context) {
         }
 
         // 新增模板
+        function createDefaultTemplate() {
+            const templateName = '建案進度報告';
+            
+            const newTemplate = {
+                id: 'temp_' + Date.now(),
+                name: templateName,
+                carouselData: {
+                    type: 'carousel',
+                    contents: [JSON.parse(JSON.stringify(defaultBubbleTemplate))]
+                }
+            };
+            
+            templates.push(newTemplate);
+            currentTemplateIndex = templates.length - 1;
+            carouselData = newTemplate.carouselData;
+            currentTabIndex = 0;
+            
+            document.querySelector('.editor-title').textContent = '📝 ' + templateName;
+            document.getElementById('template-title').value = templateName;
+            
+            renderTemplateList();
+            updateTabs();
+            loadTabContent();
+            updatePreview();
+        }
+
         function addNewTemplate() {
             const templateName = prompt('請輸入模板名稱:', '新模板 ' + (templates.length + 1));
             if (!templateName) return;
