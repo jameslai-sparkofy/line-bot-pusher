@@ -890,13 +890,13 @@ export async function onRequest(context) {
             html += '</div>';
             html += '</div>';
             
-            // 內容設定
+            // 內容設定 - 按順序定義內容元素
             const body = bubble.body?.contents || [];
-            const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
-            const subtitleContent = body.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs' && c !== titleContent);
-            const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
-            const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
-            const bottomContent = body.slice(-1).find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c !== dateContent);
+            const titleContent = body[0]; // 主標題（第一個元素）
+            const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap); // 副標題（普通文字）
+            const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm'); // 棟別box
+            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true); // 下方內容（有wrap的文字）
+            const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs'); // 日期資訊（灰色小字）
             
             html += '<div class="form-section">';
             html += '<div class="section-title"><span class="section-icon">📝</span>內容設定</div>';
@@ -972,6 +972,7 @@ export async function onRequest(context) {
             const statusDiv = input.parentElement.querySelector('.upload-status');
             const preview = input.parentElement.querySelector('.hero-preview');
             
+            console.log('開始上傳圖片:', file.name, 'Size:', file.size);
             statusDiv.textContent = '上傳中...';
             statusDiv.style.color = '#666';
             
@@ -984,31 +985,46 @@ export async function onRequest(context) {
                     body: formData
                 });
                 
+                console.log('上傳回應狀態:', response.status);
                 const result = await response.json();
+                console.log('上傳結果:', result);
                 
                 if (result.success) {
                     const bubble = carouselData.contents[currentTabIndex];
-                    if (bubble.hero) {
-                        bubble.hero.url = result.url;
-                        templates[currentTemplateIndex].carouselData = carouselData;
-                        
-                        // 更新預覽圖片
-                        if (preview) {
-                            preview.src = result.url;
-                            preview.style.display = 'block';
-                        }
-                        
-                        statusDiv.textContent = '上傳成功';
-                        statusDiv.style.color = '#28a745';
-                        
-                        // 更新預覽區
-                        updatePreview();
+                    if (!bubble.hero) {
+                        bubble.hero = {
+                            "type": "image",
+                            "size": "full",
+                            "aspectRatio": "20:13",
+                            "aspectMode": "cover"
+                        };
                     }
+                    // API 回應的 URL 在 data.publicUrl 中
+                    const imageUrl = result.data?.publicUrl || result.url;
+                    bubble.hero.url = imageUrl;
+                    templates[currentTemplateIndex].carouselData = carouselData;
+                    console.log('設定圖片URL:', imageUrl);
+                    console.log('更新後的hero對象:', bubble.hero);
+                    
+                    // 更新預覽圖片
+                    if (preview) {
+                        preview.src = imageUrl;
+                        preview.style.display = 'block';
+                        console.log('更新預覽圖片元素:', preview.src);
+                    }
+                    
+                    statusDiv.textContent = '上傳成功: ' + imageUrl;
+                    statusDiv.style.color = '#28a745';
+                    
+                    // 更新預覽區
+                    updatePreview();
+                    console.log('呼叫updatePreview完成');
                 } else {
                     statusDiv.textContent = '上傳失敗: ' + result.error;
                     statusDiv.style.color = '#dc3545';
                 }
             } catch (error) {
+                console.error('上傳錯誤:', error);
                 statusDiv.textContent = '上傳失敗: ' + error.message;
                 statusDiv.style.color = '#dc3545';
             }
@@ -1039,22 +1055,41 @@ export async function onRequest(context) {
         // 更新日期資訊
         function updateDateInfo(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            const dateContent = bubble.body.contents.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
-            if (dateContent) {
-                dateContent.text = text;
-                templates[currentTemplateIndex].carouselData = carouselData;
-                updatePreview();
+            let dateContent = bubble.body.contents.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
+            
+            if (!dateContent && text) {
+                // 如果不存在日期資訊元素，在最後創建一個
+                dateContent = {
+                    "type": "text",
+                    "text": text,
+                    "wrap": true,
+                    "color": "#aaaaaa",
+                    "size": "xs"
+                };
+                bubble.body.contents.push(dateContent);
+            } else if (dateContent) {
+                if (text) {
+                    dateContent.text = text;
+                } else {
+                    // 如果文字為空，移除日期資訊
+                    const index = bubble.body.contents.indexOf(dateContent);
+                    if (index > -1) {
+                        bubble.body.contents.splice(index, 1);
+                    }
+                }
             }
+            
+            templates[currentTemplateIndex].carouselData = carouselData;
+            updatePreview();
         }
 
         // 更新副標題
         function updateSubtitle(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            let subtitleContent = bubble.body.contents.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs');
+            let subtitleContent = bubble.body.contents.find(c => c.type === 'text' && c !== bubble.body.contents[0] && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
             
             if (!subtitleContent && text) {
                 // 如果不存在副標題元素，在主標題後創建一個
-                const titleIndex = bubble.body.contents.findIndex(c => c.type === 'text' && c.weight === 'bold');
                 subtitleContent = {
                     "type": "text",
                     "text": text,
@@ -1062,9 +1097,23 @@ export async function onRequest(context) {
                     "color": "#666666",
                     "margin": "sm"
                 };
-                bubble.body.contents.splice(titleIndex + 1, 0, subtitleContent);
+                // 找到棟別box的位置，插入到前面，如果沒有則插入到位置1
+                const buildingBoxIndex = bubble.body.contents.findIndex(c => c.type === 'box' && c.layout === 'vertical');
+                const insertIndex = buildingBoxIndex > -1 ? buildingBoxIndex : 1;
+                bubble.body.contents.splice(insertIndex, 0, subtitleContent);
+                console.log('添加副標題到位置:', insertIndex, '內容:', text);
             } else if (subtitleContent) {
-                subtitleContent.text = text;
+                if (text) {
+                    subtitleContent.text = text;
+                    console.log('更新副標題內容:', text);
+                } else {
+                    // 如果文字為空，移除副標題
+                    const index = bubble.body.contents.indexOf(subtitleContent);
+                    if (index > -1) {
+                        bubble.body.contents.splice(index, 1);
+                        console.log('移除副標題');
+                    }
+                }
             }
             
             templates[currentTemplateIndex].carouselData = carouselData;
@@ -1074,10 +1123,13 @@ export async function onRequest(context) {
         // 更新下方內容
         function updateBottomContent(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            let bottomContent = bubble.body.contents.slice(-1).find(c => c.type === 'text');
+            // 使用更精確的選擇器，避免與日期資訊衝突
+            const titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
+            const subtitleContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
+            let bottomContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa');
             
             if (!bottomContent && text) {
-                // 如果不存在下方內容元素，在最後創建一個
+                // 如果不存在下方內容元素，在日期資訊前創建一個
                 bottomContent = {
                     "type": "text",
                     "text": text,
@@ -1085,9 +1137,26 @@ export async function onRequest(context) {
                     "wrap": true,
                     "margin": "md"
                 };
-                bubble.body.contents.push(bottomContent);
+                
+                // 找到日期資訊的位置，插入到前面
+                const dateIndex = bubble.body.contents.findIndex(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
+                if (dateIndex > -1) {
+                    bubble.body.contents.splice(dateIndex, 0, bottomContent);
+                    console.log('添加下方內容到日期資訊前，位置:', dateIndex, '內容:', text);
+                } else {
+                    bubble.body.contents.push(bottomContent);
+                    console.log('添加下方內容到最後，內容:', text);
+                }
             } else if (bottomContent) {
-                bottomContent.text = text;
+                if (text) {
+                    bottomContent.text = text;
+                } else {
+                    // 如果文字為空，移除下方內容
+                    const index = bubble.body.contents.indexOf(bottomContent);
+                    if (index > -1) {
+                        bubble.body.contents.splice(index, 1);
+                    }
+                }
             }
             
             templates[currentTemplateIndex].carouselData = carouselData;
@@ -1338,6 +1407,13 @@ export async function onRequest(context) {
                 html += '<div class="bubble-content">';
                 html += '<div class="bubble-title">' + title + '</div>';
                 
+                // 副標題
+                const titleContent = body[0];
+                const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
+                if (subtitleContent?.text) {
+                    html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + subtitleContent.text + '</div>';
+                }
+                
                 // 棟別資訊
                 if (buildingBox?.contents) {
                     html += '<div style="margin: 8px 0;">';
@@ -1352,6 +1428,12 @@ export async function onRequest(context) {
                         }
                     });
                     html += '</div>';
+                }
+                
+                // 下方內容
+                const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa');
+                if (bottomContent?.text) {
+                    html += '<div style="font-size: 11px; color: #555; margin-top: 6px; line-height: 1.3;">' + bottomContent.text + '</div>';
                 }
                 
                 // 日期資訊

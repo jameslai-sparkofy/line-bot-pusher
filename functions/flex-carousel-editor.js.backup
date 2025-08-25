@@ -1,0 +1,1528 @@
+// Flex Carousel 專業編輯器 - 房地產專用
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const templateId = url.searchParams.get('id');
+  const categoryId = url.searchParams.get('category') || 'construction_progress';
+
+  const flexCarouselEditorHtml = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex Carousel 編輯器 - 房地產專用</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 頭部工具列 */
+        .editor-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .editor-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .btn-primary {
+            background: rgba(255,255,255,0.9);
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        /* 主要編輯區域 */
+        .editor-main {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        /* 左側模板選擇面板 */
+        .template-panel {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e1e8ed;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e8ed;
+            background: #f8f9fa;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .template-categories {
+            flex: 1;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .category-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .category-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .category-header:hover {
+            background: #e9ecef;
+        }
+
+        .category-header.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .category-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .category-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .category-arrow {
+            transition: transform 0.2s;
+        }
+
+        .category-header.expanded .category-arrow {
+            transform: rotate(90deg);
+        }
+
+        .category-templates {
+            display: none;
+            padding: 10px 20px;
+            background: white;
+        }
+
+        .category-item.expanded .category-templates {
+            display: block;
+        }
+
+        .template-item {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            border-radius: 4px;
+            padding-left: 8px;
+        }
+
+        .template-item:hover {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+
+        /* 中間內容編輯區 */
+        .content-editor {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e1e8ed;
+        }
+
+        .tabs-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e8ed;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .carousel-tabs {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .tab-item {
+            background: #e9ecef;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-item:hover {
+            background: #dee2e6;
+        }
+
+        .tab-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        .add-tab {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .content-form {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-icon {
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* 圖片上傳區 */
+        .image-upload {
+            border: 2px dashed #e1e8ed;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            background: #fafbfc;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .image-upload.dragover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .image-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* 按鈕管理 */
+        .buttons-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .button-list {
+            margin-bottom: 15px;
+        }
+
+        .button-item {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .button-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .button-type-select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .button-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .button-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .button-fields input {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .add-button {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* 右側預覽區 */
+        .preview-area {
+            width: 400px;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .phone-preview {
+            width: 320px;
+            height: 580px;
+            background: #000;
+            border-radius: 25px;
+            padding: 15px 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: #00b300;
+            color: white;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .chat-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .carousel-preview {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .bubble-preview {
+            min-width: 200px;
+            max-width: 200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .bubble-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .bubble-content {
+            padding: 12px;
+        }
+
+        .bubble-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .bubble-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .bubble-buttons {
+            padding: 8px 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .bubble-button {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .bubble-button:last-child {
+            margin-bottom: 0;
+        }
+
+        .bubble-button.secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+
+        .bubble-button.share {
+            background: #1db446;
+        }
+
+        /* 變數面板 */
+        .variables-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .variables-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .variable-item {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            border: 1px solid #f0e68c;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1400px) {
+            .template-panel {
+                width: 250px;
+            }
+            .preview-area {
+                width: 350px;
+            }
+            .phone-preview {
+                width: 280px;
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頭部工具列 -->
+    <div class="editor-header">
+        <div class="editor-title">🏗️ Flex Carousel 編輯器</div>
+        <div class="editor-actions">
+            <button class="btn" onclick="loadProject()">📂 載入建案</button>
+            <button class="btn" onclick="showJsonPreview()">📝 檢視 JSON</button>
+            <button class="btn" onclick="previewInNewWindow()">👁️ 預覽</button>
+            <button class="btn" onclick="saveTemplate()">💾 儲存模板</button>
+            <button class="btn btn-primary" onclick="window.close()">✕ 關閉</button>
+        </div>
+    </div>
+
+    <!-- 主要編輯區域 -->
+    <div class="editor-main">
+        <!-- 左側模板面板 -->
+        <div class="template-panel">
+            <div class="panel-header">
+                <div class="panel-title">📋 模板類別</div>
+                <div style="font-size: 12px; color: #666;">選擇或建立模板</div>
+            </div>
+            <div class="template-categories">
+                <!-- 動態載入模板類別 -->
+            </div>
+        </div>
+
+        <!-- 中間內容編輯區 -->
+        <div class="content-editor">
+            <div class="tabs-header">
+                <div class="carousel-tabs" id="carousel-tabs">
+                    <!-- 動態載入分頁標籤 -->
+                </div>
+                <button class="add-tab" onclick="addNewTab()">+ 新增分頁</button>
+            </div>
+
+            <div class="content-form" id="content-form">
+                <!-- 動態載入表單內容 -->
+            </div>
+        </div>
+
+        <!-- 右側預覽區 -->
+        <div class="preview-area">
+            <div class="phone-preview">
+                <div class="phone-screen">
+                    <div class="chat-header">LINE Chat 預覽</div>
+                    <div class="chat-content">
+                        <div class="carousel-preview" id="carousel-preview">
+                            <!-- 動態產生預覽內容 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 變數面板 -->
+            <div class="variables-panel">
+                <div class="variables-title">🔧 可用變數</div>
+                <div id="variables-list">
+                    <div class="variable-item">{{project_name}} - 建案名稱</div>
+                    <div class="variable-item">{{date}} - 今日日期</div>
+                    <div class="variable-item">{{building_count}} - 棟數</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentCategory = '${categoryId}';
+        let currentTabIndex = 0;
+        let carouselData = {
+            type: 'carousel',
+            contents: []
+        };
+        let templateCategories = [];
+
+        // 初始化編輯器
+        async function init() {
+            console.log('Carousel 編輯器初始化...');
+            
+            await loadTemplateCategories();
+            await loadDefaultTemplate();
+            
+            // 檢查是否有模板 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const templateId = urlParams.get('id');
+            
+            if (templateId) {
+                await loadExistingTemplate(templateId);
+            }
+            
+            updateTabs();
+            updatePreview();
+            updateVariablesList();
+        }
+
+        // 載入模板類別
+        async function loadTemplateCategories() {
+            try {
+                const response = await fetch('/api/template-categories');
+                const data = await response.json();
+                
+                if (data.success) {
+                    templateCategories = data.categories;
+                    renderTemplateCategories();
+                }
+            } catch (error) {
+                console.error('載入模板類別失敗:', error);
+                // 使用預設類別
+                templateCategories = [
+                    { category_id: 'construction_progress', category_name: '工地進度推送', icon: '🏗️' },
+                    { category_id: 'new_project_launch', category_name: '新建案開賣', icon: '🏢' },
+                    { category_id: 'completion_handover', category_name: '完工交屋通知', icon: '🗝️' },
+                    { category_id: 'sales_update', category_name: '銷售進度更新', icon: '📊' },
+                    { category_id: 'event_promotion', category_name: '活動推廣', icon: '🎉' }
+                ];
+                renderTemplateCategories();
+            }
+        }
+
+        // 渲染模板類別
+        function renderTemplateCategories() {
+            const container = document.querySelector('.template-categories');
+            let html = '';
+            
+            templateCategories.forEach(category => {
+                const isActive = category.category_id === currentCategory;
+                html += \`
+                    <div class="category-item \\${isActive ? 'expanded' : ''}">
+                        <div class="category-header \\${isActive ? 'active' : ''}" onclick="toggleCategory('\\${category.category_id}')">
+                            <span class="category-icon">\\${category.icon}</span>
+                            <span class="category-name">\\${category.category_name}</span>
+                            <span class="category-arrow">▶</span>
+                        </div>
+                        <div class="category-templates">
+                            <div class="template-item" onclick="selectTemplate('\\${category.category_id}', 'default')">
+                                預設模板
+                            </div>
+                            <div class="template-item" onclick="selectTemplate('\\${category.category_id}', 'custom')">
+                                自訂模板
+                            </div>
+                        </div>
+                    </div>
+                \`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 切換類別
+        function toggleCategory(categoryId) {
+            const categoryItem = document.querySelector(\`[onclick="toggleCategory('\\${categoryId}')"]\`).parentElement;
+            const header = categoryItem.querySelector('.category-header');
+            
+            // 關閉其他類別
+            document.querySelectorAll('.category-item').forEach(item => {
+                if (item !== categoryItem) {
+                    item.classList.remove('expanded');
+                    item.querySelector('.category-header').classList.remove('expanded');
+                }
+            });
+            
+            // 切換當前類別
+            categoryItem.classList.toggle('expanded');
+            header.classList.toggle('expanded');
+        }
+
+        // 選擇模板
+        function selectTemplate(categoryId, templateType) {
+            currentCategory = categoryId;
+            document.title = \`Flex 編輯器 - \\${templateCategories.find(c => c.category_id === categoryId)?.category_name || '模板'}\`;
+            
+            // 更新標題
+            const categoryName = templateCategories.find(c => c.category_id === categoryId)?.category_name || '模板';
+            const categoryIcon = templateCategories.find(c => c.category_id === categoryId)?.icon || '📝';
+            document.querySelector('.editor-title').textContent = \`\\${categoryIcon} \\${categoryName} 編輯器\`;
+            
+            loadDefaultTemplate();
+            updateTabs();
+            updatePreview();
+        }
+
+        // 載入預設模板
+        function loadDefaultTemplate() {
+            // 根據類別載入不同的預設模板
+            switch(currentCategory) {
+                case 'construction_progress':
+                    carouselData = {
+                        type: 'carousel',
+                        contents: [
+                            createDefaultBubble('工程進度更新', '{{project_name}} A棟', '進度: {{progress}}%'),
+                            createDefaultBubble('施工照片', '{{project_name}} B棟', '進度: {{progress}}%'),
+                            createSeeMoreBubble()
+                        ]
+                    };
+                    break;
+                case 'new_project_launch':
+                    carouselData = {
+                        type: 'carousel',
+                        contents: [
+                            createDefaultBubble('新案推出', '{{project_name}}', '起價 {{price}} 萬'),
+                            createDefaultBubble('預約賞屋', '限時優惠', '現在預約享優惠'),
+                            createSeeMoreBubble()
+                        ]
+                    };
+                    break;
+                default:
+                    carouselData = {
+                        type: 'carousel',
+                        contents: [
+                            createDefaultBubble('標題', '副標題', '內容描述'),
+                            createSeeMoreBubble()
+                        ]
+                    };
+            }
+        }
+
+        // 建立預設氣泡
+        function createDefaultBubble(title, subtitle, description) {
+            return {
+                type: 'bubble',
+                hero: {
+                    type: 'image',
+                    size: 'full',
+                    aspectRatio: '20:13',
+                    aspectMode: 'cover',
+                    url: 'https://via.placeholder.com/300x195/667eea/white?text=' + encodeURIComponent(title)
+                },
+                body: {
+                    type: 'box',
+                    layout: 'vertical',
+                    spacing: 'sm',
+                    contents: [
+                        {
+                            type: 'text',
+                            text: title,
+                            wrap: true,
+                            weight: 'bold',
+                            size: 'xl'
+                        },
+                        {
+                            type: 'text',
+                            text: subtitle,
+                            wrap: true,
+                            size: 'sm',
+                            color: '#666666'
+                        },
+                        {
+                            type: 'text',
+                            text: description,
+                            wrap: true,
+                            size: 'sm',
+                            margin: 'md'
+                        }
+                    ]
+                },
+                footer: {
+                    type: 'box',
+                    layout: 'vertical',
+                    spacing: 'sm',
+                    contents: [
+                        {
+                            type: 'button',
+                            style: 'primary',
+                            action: {
+                                type: 'uri',
+                                label: '查看詳情',
+                                uri: 'https://example.com'
+                            }
+                        }
+                    ]
+                }
+            };
+        }
+
+        // 建立"查看更多"氣泡
+        function createSeeMoreBubble() {
+            return {
+                type: 'bubble',
+                body: {
+                    type: 'box',
+                    layout: 'vertical',
+                    spacing: 'sm',
+                    contents: [
+                        {
+                            type: 'button',
+                            flex: 1,
+                            gravity: 'center',
+                            action: {
+                                type: 'uri',
+                                label: '查看更多',
+                                uri: 'https://example.com'
+                            }
+                        }
+                    ]
+                }
+            };
+        }
+
+        // 更新分頁標籤
+        function updateTabs() {
+            const tabsContainer = document.getElementById('carousel-tabs');
+            let html = '';
+            
+            carouselData.contents.forEach((bubble, index) => {
+                const isActive = index === currentTabIndex;
+                const title = getBubbleTitle(bubble, index);
+                html += \`
+                    <button class="tab-item \\${isActive ? 'active' : ''}" onclick="selectTab(\\${index})">
+                        \\${title}
+                        \\${carouselData.contents.length > 1 ? \`<span class="tab-close" onclick="event.stopPropagation(); removeTab(\\${index})">×</span>\` : ''}
+                    </button>
+                \`;
+            });
+            
+            tabsContainer.innerHTML = html;
+            loadTabContent();
+        }
+
+        // 取得氣泡標題
+        function getBubbleTitle(bubble, index) {
+            if (bubble.body?.contents?.[0]?.text) {
+                return bubble.body.contents[0].text.substring(0, 10) + '...';
+            }
+            return \`分頁 \\${index + 1}\`;
+        }
+
+        // 選擇分頁
+        function selectTab(index) {
+            if (index >= 0 && index < carouselData.contents.length) {
+                currentTabIndex = index;
+                updateTabs();
+            }
+        }
+
+        // 新增分頁
+        function addNewTab() {
+            const newBubble = createDefaultBubble('新分頁', '副標題', '內容描述');
+            carouselData.contents.splice(-1, 0, newBubble); // 插入到最後一個之前
+            currentTabIndex = carouselData.contents.length - 2; // 選中新增的分頁
+            updateTabs();
+            updatePreview();
+        }
+
+        // 移除分頁
+        function removeTab(index) {
+            if (carouselData.contents.length > 2) { // 至少保留2個分頁
+                carouselData.contents.splice(index, 1);
+                if (currentTabIndex >= carouselData.contents.length) {
+                    currentTabIndex = carouselData.contents.length - 1;
+                }
+                if (currentTabIndex >= index && currentTabIndex > 0) {
+                    currentTabIndex--;
+                }
+                updateTabs();
+                updatePreview();
+            } else {
+                alert('至少需要保留一個內容分頁和一個"查看更多"分頁');
+            }
+        }
+
+        // 載入分頁內容表單
+        function loadTabContent() {
+            const form = document.getElementById('content-form');
+            const bubble = carouselData.contents[currentTabIndex];
+            
+            if (!bubble) return;
+            
+            // 檢查是否是"查看更多"分頁
+            const isSeeMore = bubble.body?.contents?.length === 1 && 
+                            bubble.body.contents[0].type === 'button';
+            
+            if (isSeeMore) {
+                form.innerHTML = \`
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="section-icon">🔗</span>
+                            查看更多按鈕設定
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">按鈕文字</label>
+                            <input type="text" class="form-input" value="\\${bubble.body.contents[0].action?.label || '查看更多'}" 
+                                   onchange="updateSeeMoreButton('label', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">連結網址</label>
+                            <input type="url" class="form-input" value="\\${bubble.body.contents[0].action?.uri || 'https://example.com'}" 
+                                   onchange="updateSeeMoreButton('uri', this.value)">
+                        </div>
+                    </div>
+                \`;
+            } else {
+                // 一般內容分頁
+                const hero = bubble.hero;
+                const body = bubble.body?.contents || [];
+                const title = body.find(c => c.weight === 'bold')?.text || '';
+                const subtitle = body.find(c => c.size === 'sm' && c.color === '#666666')?.text || '';
+                const description = body.find(c => c.wrap && c.margin)?.text || '';
+                const buttons = bubble.footer?.contents || [];
+                
+                form.innerHTML = \`
+                    <!-- 圖片設定 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="section-icon">🖼️</span>
+                            主圖設定
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">圖片</label>
+                            <div class="image-upload" onclick="uploadImage()" ondrop="handleImageDrop(event)" ondragover="handleImageDragover(event)">
+                                \\${hero?.url ? `
+                                    <img src="\\${hero.url}" class="image-preview" alt="預覽圖片">
+                                    <div class="image-actions">
+                                        <button type="button" onclick="event.stopPropagation(); uploadImage()" style="background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">更換圖片</button>
+                                        <button type="button" onclick="event.stopPropagation(); removeImage()" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">移除圖片</button>
+                                    </div>
+                                ` : `
+                                    <div class="upload-icon">📸</div>
+                                    <div class="upload-text">點擊或拖拽圖片到此處上傳</div>
+                                    <div class="upload-hint">支援 JPG、PNG、GIF 格式，最大 5MB</div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 內容設定 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="section-icon">📝</span>
+                            內容設定
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">主標題</label>
+                            <input type="text" class="form-input" value="\\${title}" onchange="updateBubbleText('title', this.value)" placeholder="請輸入主標題">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">副標題</label>
+                            <input type="text" class="form-input" value="\\${subtitle}" onchange="updateBubbleText('subtitle', this.value)" placeholder="請輸入副標題">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">內容描述</label>
+                            <textarea class="form-textarea" onchange="updateBubbleText('description', this.value)" placeholder="請輸入內容描述">\\${description}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- 按鈕設定 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="section-icon">🔘</span>
+                            按鈕設定
+                        </div>
+                        <div class="buttons-section">
+                            <div class="button-list" id="button-list">
+                                <!-- 動態產生按鈕列表 -->
+                            </div>
+                            <button class="add-button" onclick="addButton()">➕ 新增按鈕</button>
+                        </div>
+                    </div>
+                \`;
+                
+                // 載入按鈕列表
+                loadButtonList();
+            }
+        }
+
+        // 更新"查看更多"按鈕
+        function updateSeeMoreButton(field, value) {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (bubble.body?.contents?.[0]?.action) {
+                bubble.body.contents[0].action[field] = value;
+                updatePreview();
+            }
+        }
+
+        // 更新氣泡文字內容
+        function updateBubbleText(type, value) {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (!bubble.body?.contents) return;
+            
+            const contents = bubble.body.contents;
+            
+            switch(type) {
+                case 'title':
+                    const titleItem = contents.find(c => c.weight === 'bold');
+                    if (titleItem) {
+                        titleItem.text = value;
+                    } else {
+                        contents.unshift({
+                            type: 'text',
+                            text: value,
+                            wrap: true,
+                            weight: 'bold',
+                            size: 'xl'
+                        });
+                    }
+                    break;
+                    
+                case 'subtitle':
+                    let subtitleItem = contents.find(c => c.size === 'sm' && c.color === '#666666');
+                    if (subtitleItem) {
+                        subtitleItem.text = value;
+                    } else {
+                        // 插入到標題後面
+                        const titleIndex = contents.findIndex(c => c.weight === 'bold');
+                        contents.splice(titleIndex + 1, 0, {
+                            type: 'text',
+                            text: value,
+                            wrap: true,
+                            size: 'sm',
+                            color: '#666666'
+                        });
+                    }
+                    break;
+                    
+                case 'description':
+                    let descItem = contents.find(c => c.wrap && c.margin);
+                    if (descItem) {
+                        descItem.text = value;
+                    } else {
+                        contents.push({
+                            type: 'text',
+                            text: value,
+                            wrap: true,
+                            size: 'sm',
+                            margin: 'md'
+                        });
+                    }
+                    break;
+            }
+            
+            updateTabs(); // 更新分頁標題
+            updatePreview();
+        }
+
+        // 載入按鈕列表
+        function loadButtonList() {
+            const bubble = carouselData.contents[currentTabIndex];
+            const buttons = bubble.footer?.contents || [];
+            const container = document.getElementById('button-list');
+            
+            let html = '';
+            buttons.forEach((button, index) => {
+                html += \`
+                    <div class="button-item">
+                        <div class="button-header">
+                            <select class="button-type-select" onchange="updateButtonType(\\${index}, this.value)">
+                                <option value="uri" \\${button.action?.type === 'uri' ? 'selected' : ''}>連結按鈕</option>
+                                <option value="postback" \\${button.action?.type === 'postback' ? 'selected' : ''}>回傳按鈕</option>
+                                <option value="share" \\${button.action?.type === 'share' ? 'selected' : ''}>分享按鈕</option>
+                            </select>
+                            <button class="button-remove" onclick="removeButton(\\${index})">刪除</button>
+                        </div>
+                        <div class="button-fields">
+                            <input type="text" placeholder="按鈕文字" value="\\${button.action?.label || ''}" 
+                                   onchange="updateButton(\\${index}, 'label', this.value)">
+                            \\${button.action?.type === 'uri' ? 
+                                \`<input type="url" placeholder="連結網址" value="\\${button.action?.uri || ''}" 
+                                       onchange="updateButton(\\${index}, 'uri', this.value)">\` :
+                                button.action?.type === 'postback' ?
+                                \`<input type="text" placeholder="回傳資料" value="\\${button.action?.data || ''}" 
+                                       onchange="updateButton(\\${index}, 'data', this.value)">\` :
+                                \`<input type="text" placeholder="分享內容" value="分享此建案資訊" readonly>\`
+                            }
+                        </div>
+                    </div>
+                \`;
+            });
+            
+            if (container) {
+                container.innerHTML = html;
+            }
+        }
+
+        // 新增按鈕
+        function addButton() {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (!bubble.footer) {
+                bubble.footer = {
+                    type: 'box',
+                    layout: 'vertical',
+                    spacing: 'sm',
+                    contents: []
+                };
+            }
+            
+            if (bubble.footer.contents.length >= 3) {
+                alert('每個分頁最多只能有3個按鈕');
+                return;
+            }
+            
+            bubble.footer.contents.push({
+                type: 'button',
+                style: bubble.footer.contents.length === 0 ? 'primary' : 'secondary',
+                action: {
+                    type: 'uri',
+                    label: '新按鈕',
+                    uri: 'https://example.com'
+                }
+            });
+            
+            loadButtonList();
+            updatePreview();
+        }
+
+        // 移除按鈕
+        function removeButton(index) {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (bubble.footer?.contents) {
+                bubble.footer.contents.splice(index, 1);
+                loadButtonList();
+                updatePreview();
+            }
+        }
+
+        // 更新按鈕
+        function updateButton(index, field, value) {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (bubble.footer?.contents?.[index]?.action) {
+                bubble.footer.contents[index].action[field] = value;
+                updatePreview();
+            }
+        }
+
+        // 更新按鈕類型
+        function updateButtonType(index, type) {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (bubble.footer?.contents?.[index]) {
+                const button = bubble.footer.contents[index];
+                const oldLabel = button.action?.label || '按鈕';
+                
+                switch(type) {
+                    case 'uri':
+                        button.action = {
+                            type: 'uri',
+                            label: oldLabel,
+                            uri: 'https://example.com'
+                        };
+                        break;
+                    case 'postback':
+                        button.action = {
+                            type: 'postback',
+                            label: oldLabel,
+                            data: 'action=click'
+                        };
+                        break;
+                    case 'share':
+                        button.action = {
+                            type: 'uri',
+                            label: '分享給朋友',
+                            uri: 'line://app/YOUR_LIFF_ID?action=share'
+                        };
+                        button.style = 'secondary';
+                        break;
+                }
+                
+                loadButtonList();
+                updatePreview();
+            }
+        }
+
+        // 圖片上傳處理
+        async function uploadImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await handleImageUpload(file);
+                }
+            };
+            input.click();
+        }
+
+        // 處理圖片上傳
+        async function handleImageUpload(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                // 顯示載入狀態
+                const uploadArea = document.querySelector('.image-upload');
+                uploadArea.innerHTML = '<div class="upload-icon">⏳</div><div class="upload-text">上傳中...</div>';
+                
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 更新圖片 URL
+                    const bubble = carouselData.contents[currentTabIndex];
+                    if (!bubble.hero) {
+                        bubble.hero = {
+                            type: 'image',
+                            size: 'full',
+                            aspectRatio: '20:13',
+                            aspectMode: 'cover',
+                            url: result.data.publicUrl
+                        };
+                    } else {
+                        bubble.hero.url = result.data.publicUrl;
+                    }
+                    
+                    loadTabContent(); // 重新載入表單
+                    updatePreview();
+                    
+                } else {
+                    alert('上傳失敗: ' + result.error);
+                    loadTabContent(); // 恢復表單
+                }
+            } catch (error) {
+                console.error('上傳錯誤:', error);
+                alert('上傳失敗: ' + error.message);
+                loadTabContent(); // 恢復表單
+            }
+        }
+
+        // 拖放圖片處理
+        function handleImageDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleImageUpload(files[0]);
+            }
+        }
+
+        function handleImageDragover(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        // 移除圖片
+        function removeImage() {
+            const bubble = carouselData.contents[currentTabIndex];
+            if (bubble.hero) {
+                bubble.hero.url = 'https://via.placeholder.com/300x195/667eea/white?text=No+Image';
+            }
+            loadTabContent();
+            updatePreview();
+        }
+
+        // 更新預覽
+        function updatePreview() {
+            const container = document.getElementById('carousel-preview');
+            let html = '';
+            
+            carouselData.contents.forEach((bubble, index) => {
+                const hero = bubble.hero;
+                const body = bubble.body?.contents || [];
+                const title = body.find(c => c.weight === 'bold')?.text || \`分頁 \\${index + 1}\`;
+                const subtitle = body.find(c => c.size === 'sm' && c.color === '#666666')?.text || '';
+                const buttons = bubble.footer?.contents || [];
+                
+                // 檢查是否是"查看更多"分頁
+                const isSeeMore = bubble.body?.contents?.length === 1 && 
+                                bubble.body.contents[0].type === 'button';
+                
+                if (isSeeMore) {
+                    html += \`
+                        <div class="bubble-preview \\${index === currentTabIndex ? 'active' : ''}">
+                            <div class="bubble-content" style="padding: 40px 20px; text-align: center;">
+                                <button class="bubble-button" style="background: #667eea; padding: 15px 20px;">
+                                    \\${bubble.body.contents[0].action?.label || '查看更多'}
+                                </button>
+                            </div>
+                        </div>
+                    \`;
+                } else {
+                    html += \`
+                        <div class="bubble-preview \\${index === currentTabIndex ? 'active' : ''}">
+                            \\${hero?.url && hero.url !== 'https://via.placeholder.com/300x195/667eea/white?text=No+Image' ? 
+                                \`<img src="\\${hero.url}" class="bubble-image" alt="圖片">\` : 
+                                \`<div class="bubble-image" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #999;">無圖片</div>\`
+                            }
+                            <div class="bubble-content">
+                                <div class="bubble-title">\\${title}</div>
+                                \\${subtitle ? \`<div style="font-size: 12px; color: #666; margin-bottom: 6px;">\\${subtitle}</div>\` : ''}
+                            </div>
+                            \\${buttons.length > 0 ? \`
+                                <div class="bubble-buttons">
+                                    \\${buttons.map((btn, btnIndex) => {
+                                        const btnClass = btnIndex === 0 ? 'bubble-button' : 
+                                                       btn.action?.type === 'share' ? 'bubble-button share' :
+                                                       'bubble-button secondary';
+                                        return \`<button class="\\${btnClass}">\\${btn.action?.label || '按鈕'}</button>\`;
+                                    }).join('')}
+                                </div>
+                            \` : ''}
+                        </div>
+                    \`;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 更新變數列表
+        function updateVariablesList() {
+            const container = document.getElementById('variables-list');
+            const baseVariables = [
+                '{{project_name}} - 建案名稱',
+                '{{date}} - 今日日期',
+                '{{building_count}} - 棟數',
+                '{{contact_phone}} - 聯絡電話',
+                '{{contact_person}} - 聯絡人'
+            ];
+            
+            // 根據類別增加特定變數
+            let categoryVariables = [];
+            switch(currentCategory) {
+                case 'construction_progress':
+                    categoryVariables = [
+                        '{{progress}} - 工程進度',
+                        '{{completion_date}} - 預計完工',
+                        '{{current_phase}} - 目前階段'
+                    ];
+                    break;
+                case 'sales_update':
+                    categoryVariables = [
+                        '{{building_A_sold}} - A棟銷售率',
+                        '{{building_B_sold}} - B棟銷售率',
+                        '{{remaining_units}} - 剩餘戶數'
+                    ];
+                    break;
+                case 'new_project_launch':
+                    categoryVariables = [
+                        '{{starting_price}} - 起始價格',
+                        '{{total_units}} - 總戶數',
+                        '{{launch_date}} - 開賣日期'
+                    ];
+                    break;
+            }
+            
+            const allVariables = [...baseVariables, ...categoryVariables];
+            
+            container.innerHTML = allVariables.map(variable => 
+                \`<div class="variable-item">\\${variable}</div>\`
+            ).join('');
+        }
+
+        // 工具列功能
+        function loadProject() {
+            // TODO: 載入建案資料
+            alert('建案載入功能開發中...');
+        }
+
+        function showJsonPreview() {
+            const jsonWindow = window.open('', '_blank', 'width=800,height=600');
+            jsonWindow.document.write(`
+                <html>
+                    <head><title>Flex Carousel JSON</title></head>
+                    <body style="font-family: monospace; padding: 20px;">
+                        <h3>生成的 Flex Carousel JSON</h3>
+                        <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow: auto; white-space: pre-wrap; max-height: 80vh;">\\${JSON.stringify(carouselData, null, 2)}</pre>
+                        <br>
+                        <button onclick="navigator.clipboard.writeText('\\${JSON.stringify(carouselData).replace(/'/g, "\\\\'")}'); alert('JSON 已複製到剪貼簿!');" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">📋 複製 JSON</button>
+                        <button onclick="window.close();" style="margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">✕ 關閉</button>
+                    </body>
+                </html>
+            `);
+        }
+
+        function previewInNewWindow() {
+            alert('預覽功能開發中...');
+        }
+
+        async function saveTemplate() {
+            const templateName = prompt('請輸入模板名稱:');
+            if (!templateName) return;
+            
+            const categoryName = templateCategories.find(c => c.category_id === currentCategory)?.category_name || '自訂';
+            
+            try {
+                const response = await fetch('/api/flex-templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_name: templateName,
+                        description: \`\\${categoryName}模板 - 共\\${carouselData.contents.length}個分頁\`,
+                        template_type: 'carousel',
+                        flex_content: JSON.stringify(carouselData),
+                        category: currentCategory
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('模板儲存成功！\\n模板 ID: ' + result.template_id);
+                } else {
+                    alert('儲存失敗：' + result.error);
+                }
+            } catch (error) {
+                alert('儲存出錯：' + error.message);
+            }
+        }
+
+        // 載入現有模板
+        async function loadExistingTemplate(templateId) {
+            try {
+                const response = await fetch('/api/flex-templates/' + templateId);
+                const data = await response.json();
+                
+                if (data.success && data.template) {
+                    const template = data.template;
+                    document.querySelector('.editor-title').textContent = '📱 編輯模板: ' + template.template_name;
+                    
+                    // 解析 flex_content
+                    const flexContent = JSON.parse(template.flex_content);
+                    if (flexContent.type === 'carousel') {
+                        carouselData = flexContent;
+                    }
+                    
+                    // 設定分類
+                    if (template.category) {
+                        currentCategory = template.category;
+                    }
+                    
+                    currentTabIndex = 0;
+                    updateTabs();
+                    updatePreview();
+                    updateVariablesList();
+                } else {
+                    alert('載入模板失敗: ' + (data.error || '模板不存在'));
+                }
+            } catch (error) {
+                console.error('載入模板錯誤:', error);
+                alert('載入模板時發生錯誤');
+            }
+        }
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>\`;
+
+  return new Response(flexCarouselEditorHtml, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
+}

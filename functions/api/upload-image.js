@@ -50,8 +50,8 @@ export async function onRequest(context) {
       },
     });
 
-    // 生成公開 URL (需要設定 custom domain 或使用 R2 public URL)
-    const publicUrl = `https://line-bot-images.YOUR_ACCOUNT_ID.r2.cloudflarestorage.com/${fileName}`;
+    // 生成公開 URL (使用 r2.dev 公開 URL)
+    const publicUrl = `https://pub-9f24ba92d71846309db262810b41bab1.r2.dev/${fileName}`;
     
     // 記錄到資料庫
     try {
