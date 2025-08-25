@@ -432,6 +432,10 @@ export async function onRequest(context) {
 
         <!-- 中間內容編輯區 -->
         <div class="content-editor">
+            <!-- 模板標題 -->
+            <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e1e8ed;">
+                <input type="text" id="template-title" class="form-input" placeholder="模板標題" style="font-size: 16px; font-weight: bold; border: 1px solid #ddd; padding: 8px 12px;" onchange="updateCurrentTemplateTitle(this.value)">
+            </div>
             <div class="tabs-header">
                 <div class="carousel-tabs" id="carousel-tabs">
                     <!-- 動態載入分頁標籤 -->
@@ -441,6 +445,17 @@ export async function onRequest(context) {
 
             <div class="content-form" id="content-form">
                 <!-- 動態載入表單內容 -->
+            </div>
+        </div>
+
+        <!-- 變數管理欄位 -->
+        <div class="variable-panel" style="width: 250px; background: white; border-right: 1px solid #e1e8ed; display: flex; flex-direction: column;">
+            <div class="panel-header" style="padding: 15px; border-bottom: 1px solid #e1e8ed; background: #f8f9fa;">
+                <div class="panel-title" style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 10px;">🔧 變數管理</div>
+                <button class="btn" onclick="addVariable()" style="background: #17a2b8; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; width: 100%;">+ 新增變數</button>
+            </div>
+            <div class="variable-list" id="variable-list" style="flex: 1; padding: 10px; overflow-y: auto;">
+                <!-- 動態載入變數列表 -->
             </div>
         </div>
 
@@ -464,6 +479,7 @@ export async function onRequest(context) {
         let currentTemplateIndex = 0;
         let currentTabIndex = 0;
         let templates = [];
+        let templateVariables = {}; // 模板變數: {name: value}
         let carouselData = {
             type: 'carousel',
             contents: []
@@ -619,6 +635,111 @@ export async function onRequest(context) {
             
             updateTabs();
             updatePreview();
+            renderVariables();
+        }
+
+        // 變數管理功能
+        function renderVariables() {
+            const variableList = document.getElementById('variable-list');
+            let html = '';
+            
+            // 預設變數
+            const defaultVariables = {
+                'project_name': '建案名稱',
+                'project_location': '建案位置', 
+                'report_date': '報告日期',
+                'progress_data': '各棟進度JSON'
+            };
+            
+            // 合併預設變數和自定義變數
+            const allVariables = {...defaultVariables, ...templateVariables};
+            
+            Object.keys(allVariables).forEach(key => {
+                const value = templateVariables[key] || '';
+                const isDefault = key in defaultVariables;
+                
+                html += '<div class="variable-item" style="margin-bottom: 10px; padding: 8px; border: 1px solid #eee; border-radius: 4px; background: ' + (isDefault ? '#f8f9fa' : 'white') + ';">';
+                html += '<div style="font-size: 12px; color: #666; margin-bottom: 4px;">' + (isDefault ? '🔹' : '🔸') + ' ' + allVariables[key] + '</div>';
+                
+                if (key === 'progress_data') {
+                    // progress_data 使用特殊的編輯界面
+                    html += '<textarea class="form-input" style="font-size: 10px; padding: 4px 6px; font-family: monospace; height: 80px;" ';
+                    html += 'placeholder="[{\\"name\\": \\"A棟\\", \\"progress\\": \\"95%\\"}]" onchange="updateVariable(\'' + key + '\', this.value)">' + value + '</textarea>';
+                    html += '<div style="font-size: 10px; color: #888; margin-top: 2px;">JSON格式：[{"name": "棟別", "progress": "進度%"}]</div>';
+                } else {
+                    html += '<input type="text" class="form-input" style="font-size: 11px; padding: 4px 6px; font-family: monospace;" ';
+                    html += 'placeholder="{{' + key + '}}" value="' + value + '" onchange="updateVariable(\'' + key + '\', this.value)">';
+                }
+                
+                if (!isDefault) {
+                    html += '<button class="template-delete-btn" onclick="removeVariable(\'' + key + '\')" style="margin-top: 4px; font-size: 10px; padding: 2px 6px;">刪除</button>';
+                }
+                html += '<button class="btn" onclick="insertVariable(\'' + key + '\')" style="margin-top: 4px; margin-left: 4px; font-size: 10px; padding: 2px 6px; background: #28a745; color: white;">插入</button>';
+                html += '</div>';
+            });
+            
+            if (html === '') {
+                html = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">尚無自定義變數</div>';
+            }
+            
+            variableList.innerHTML = html;
+        }
+        
+        function addVariable() {
+            const name = prompt('請輸入變數名稱（英文）:', '');
+            const description = prompt('請輸入變數說明:', '');
+            if (name && description) {
+                // 如果是 progress_data，建立預設的棟別進度結構
+                if (name === 'progress_data') {
+                    templateVariables[name] = JSON.stringify([
+                        {"name": "A棟", "progress": "95%"},
+                        {"name": "B棟", "progress": "80%"}
+                    ], null, 2);
+                } else {
+                    templateVariables[name] = '';
+                }
+                renderVariables();
+            }
+        }
+        
+        function updateVariable(name, value) {
+            templateVariables[name] = value;
+        }
+        
+        function removeVariable(name) {
+            delete templateVariables[name];
+            renderVariables();
+        }
+        
+        function insertVariable(name) {
+            // 找到當前聚焦的文字輸入框並插入變數
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                const variable = '{{' + name + '}}';
+                const start = activeElement.selectionStart;
+                const end = activeElement.selectionEnd;
+                const value = activeElement.value;
+                activeElement.value = value.substring(0, start) + variable + value.substring(end);
+                activeElement.selectionStart = activeElement.selectionEnd = start + variable.length;
+                
+                // 觸發 change 事件
+                activeElement.dispatchEvent(new Event('change'));
+                activeElement.focus();
+            } else {
+                // 複製到剪貼簿
+                navigator.clipboard.writeText('{{' + name + '}}').then(() => {
+                    alert('變數 {{' + name + '}} 已複製到剪貼簿');
+                });
+            }
+        }
+
+        // 更新當前模板標題
+        function updateCurrentTemplateTitle(title) {
+            if (templates.length > 0 && title) {
+                templates[currentTemplateIndex].name = title;
+                document.getElementById('editor-title').textContent = '📝 ' + title;
+                renderTemplateList();
+            }
         }
 
         // 編輯模板標題
@@ -685,6 +806,7 @@ export async function onRequest(context) {
                 currentTabIndex = 0;
                 
                 document.querySelector('.editor-title').textContent = '📝 ' + templates[index].name;
+                document.getElementById('template-title').value = templates[index].name;
                 
                 renderTemplateList();
                 updateTabs();
@@ -712,6 +834,7 @@ export async function onRequest(context) {
             currentTabIndex = 0;
             
             document.querySelector('.editor-title').textContent = '📝 ' + templateName;
+            document.getElementById('template-title').value = templateName;
             
             renderTemplateList();
             updateTabs();
@@ -719,7 +842,7 @@ export async function onRequest(context) {
         }
 
         // 刪除模板
-        function deleteTemplate(index) {
+        async function deleteTemplate(index) {
             if (templates.length <= 1) {
                 alert('至少需要保留一個模板');
                 return;
@@ -727,6 +850,23 @@ export async function onRequest(context) {
             
             if (!confirm('確定要刪除模板 "' + templates[index].name + '" 嗎？')) {
                 return;
+            }
+
+            const templateToDelete = templates[index];
+            
+            // 如果有 template_id，從資料庫刪除
+            if (templateToDelete.id && !templateToDelete.id.startsWith('temp_')) {
+                try {
+                    const response = await fetch('/api/flex-templates/' + templateToDelete.id, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    if (!result.success) {
+                        console.error('Delete template failed:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Delete template error:', error);
+                }
             }
             
             templates.splice(index, 1);
@@ -742,6 +882,7 @@ export async function onRequest(context) {
             if (templates.length > 0) {
                 carouselData = templates[currentTemplateIndex].carouselData;
                 document.querySelector('.editor-title').textContent = '📝 ' + templates[currentTemplateIndex].name;
+                document.getElementById('template-title').value = templates[currentTemplateIndex].name;
             }
             
             renderTemplateList();
@@ -852,19 +993,20 @@ export async function onRequest(context) {
             html += '<div class="section-title"><span class="section-icon">🖼️</span>主圖設定</div>';
             html += '<div class="form-group">';
             html += '<label class="form-label">圖片上傳</label>';
-            html += '<input type="file" id="heroImageUpload" class="form-input" accept="image/*" onchange="uploadHeroImage(this)" style="margin-bottom: 5px;">';
-            html += '<div class="upload-status" id="uploadStatus" style="font-size: 12px; color: #666; margin-bottom: 5px;"></div>';
-            html += '<img id="heroImagePreview" src="' + (bubble.hero?.url || '') + '" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 4px; display: ' + (bubble.hero?.url ? 'block' : 'none') + ';">';
+            html += '<input type="file" class="form-input hero-upload" accept="image/*" onchange="uploadHeroImage(this)" style="margin-bottom: 5px;">';
+            html += '<div class="upload-status" style="font-size: 12px; color: #666; margin-bottom: 5px;"></div>';
+            html += '<img class="hero-preview" src="' + (bubble.hero?.url || '') + '" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 4px; display: ' + (bubble.hero?.url ? 'block' : 'none') + ';">';
             html += '</div>';
             html += '</div>';
             
             // 內容設定
             const body = bubble.body?.contents || [];
-            const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
-            const subtitleContent = body.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs' && c !== titleContent);
-            const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
-            const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
-            const bottomContent = body.slice(-1).find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c !== dateContent);
+            // 按順序定義內容元素
+            const titleContent = body[0]; // 主標題（第一個元素）
+            const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa'); // 副標題（普通文字）
+            const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm'); // 棟別box
+            const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs'); // 日期資訊（灰色小字）
+            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c !== dateContent && c.wrap === true); // 下方內容
             
             html += '<div class="form-section">';
             html += '<div class="section-title"><span class="section-icon">📝</span>內容設定</div>';
@@ -875,10 +1017,6 @@ export async function onRequest(context) {
             html += '<div class="form-group">';
             html += '<label class="form-label">副標題</label>';
             html += '<input type="text" class="form-input" value="' + (subtitleContent?.text || '') + '" onchange="updateSubtitle(this.value)" placeholder="例：台北市信義區">';
-            html += '</div>';
-            html += '<div class="form-group">';
-            html += '<label class="form-label">日期資訊</label>';
-            html += '<input type="text" class="form-input" value="' + (dateContent?.text || '') + '" onchange="updateDateInfo(this.value)" placeholder="例：2025-08-24 進度報告">';
             html += '</div>';
             html += '<div class="form-group">';
             html += '<label class="form-label">下方內容</label>';
@@ -910,6 +1048,15 @@ export async function onRequest(context) {
             }
             html += '<button type="button" class="btn" onclick="addBuilding()" style="background: #28a745; color: white;">+ 新增棟別</button>';
             html += '</div>';
+
+            // 日期資訊
+            html += '<div class="form-section">';
+            html += '<div class="section-title"><span class="section-icon">📅</span>日期資訊</div>';
+            html += '<div class="form-group">';
+            html += '<label class="form-label">日期資訊</label>';
+            html += '<input type="text" class="form-input" value="' + (dateContent?.text || '') + '" onchange="updateDateInfo(this.value)" placeholder="例：2025-08-24 進度報告">';
+            html += '</div>';
+            html += '</div>';
             
             // 按鈕設定
             const buttons = bubble.footer?.contents || [];
@@ -921,13 +1068,7 @@ export async function onRequest(context) {
                 html += '<input type="text" class="form-input" value="' + (button.action?.label || '') + '" onchange="updateButtonLabel(' + index + ', this.value)" placeholder="按鈕文字" style="margin-bottom: 5px;">';
                 html += '<input type="url" class="form-input" value="' + (button.action?.uri || '') + '" onchange="updateButtonUri(' + index + ', this.value)" placeholder="按鈕連結" style="margin-bottom: 5px;">';
                 html += '<label class="form-label">按鈕顏色</label>';
-                html += '<select class="form-input" onchange="updateButtonColor(' + index + ', this.value)" style="margin-bottom: 5px;">';
-                html += '<option value="#1976d2" ' + (button.color === '#1976d2' ? 'selected' : '') + '>藍色 (預設)</option>';
-                html += '<option value="#388e3c" ' + (button.color === '#388e3c' ? 'selected' : '') + '>綠色</option>';
-                html += '<option value="#f57c00" ' + (button.color === '#f57c00' ? 'selected' : '') + '>橙色</option>';
-                html += '<option value="#d32f2f" ' + (button.color === '#d32f2f' ? 'selected' : '') + '>紅色</option>';
-                html += '<option value="#7b1fa2" ' + (button.color === '#7b1fa2' ? 'selected' : '') + '>紫色</option>';
-                html += '</select>';
+                html += '<input type="text" class="form-input" value="' + (button.color || '#1976d2') + '" onchange="updateButtonColor(' + index + ', this.value)" placeholder="#ffffff" pattern="^#[0-9A-Fa-f]{6}$" style="margin-bottom: 5px;">';
                 html += '<button type="button" class="template-delete-btn" onclick="removeButton(' + index + ')" style="margin-top: 5px;">刪除按鈕</button>';
                 html += '</div>';
             });
@@ -943,8 +1084,8 @@ export async function onRequest(context) {
             if (!input.files || input.files.length === 0) return;
             
             const file = input.files[0];
-            const statusDiv = document.getElementById('uploadStatus');
-            const preview = document.getElementById('heroImagePreview');
+            const statusDiv = input.parentElement.querySelector('.upload-status');
+            const preview = input.parentElement.querySelector('.hero-preview');
             
             statusDiv.textContent = '上傳中...';
             statusDiv.style.color = '#666';
@@ -975,8 +1116,7 @@ export async function onRequest(context) {
                         statusDiv.textContent = '上傳成功';
                         statusDiv.style.color = '#28a745';
                         
-                        // 重新載入表單內容和預覽
-                        loadTabContent();
+                        // 更新預覽區
                         updatePreview();
                     }
                 } else {
@@ -1025,11 +1165,10 @@ export async function onRequest(context) {
         // 更新副標題
         function updateSubtitle(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            let subtitleContent = bubble.body.contents.find(c => c.type === 'text' && !c.weight && c.color !== '#aaaaaa' && c.size !== 'xs');
+            let subtitleContent = bubble.body.contents.find(c => c.type === 'text' && c !== bubble.body.contents[0] && c.color !== '#aaaaaa');
             
             if (!subtitleContent && text) {
                 // 如果不存在副標題元素，在主標題後創建一個
-                const titleIndex = bubble.body.contents.findIndex(c => c.type === 'text' && c.weight === 'bold');
                 subtitleContent = {
                     "type": "text",
                     "text": text,
@@ -1037,9 +1176,17 @@ export async function onRequest(context) {
                     "color": "#666666",
                     "margin": "sm"
                 };
-                bubble.body.contents.splice(titleIndex + 1, 0, subtitleContent);
+                bubble.body.contents.splice(1, 0, subtitleContent);
             } else if (subtitleContent) {
-                subtitleContent.text = text;
+                if (text) {
+                    subtitleContent.text = text;
+                } else {
+                    // 如果文字為空，移除副標題
+                    const index = bubble.body.contents.indexOf(subtitleContent);
+                    if (index > -1) {
+                        bubble.body.contents.splice(index, 1);
+                    }
+                }
             }
             
             templates[currentTemplateIndex].carouselData = carouselData;
@@ -1049,10 +1196,10 @@ export async function onRequest(context) {
         // 更新下方內容
         function updateBottomContent(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            let bottomContent = bubble.body.contents.slice(-1).find(c => c.type === 'text');
+            let bottomContent = bubble.body.contents.find(c => c.type === 'text' && c.wrap === true);
             
             if (!bottomContent && text) {
-                // 如果不存在下方內容元素，在最後創建一個
+                // 如果不存在下方內容元素，在日期資訊前創建一個
                 bottomContent = {
                     "type": "text",
                     "text": text,
@@ -1060,9 +1207,24 @@ export async function onRequest(context) {
                     "wrap": true,
                     "margin": "md"
                 };
-                bubble.body.contents.push(bottomContent);
+                
+                // 找到日期資訊的位置，插入到前面
+                const dateIndex = bubble.body.contents.findIndex(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
+                if (dateIndex > -1) {
+                    bubble.body.contents.splice(dateIndex, 0, bottomContent);
+                } else {
+                    bubble.body.contents.push(bottomContent);
+                }
             } else if (bottomContent) {
-                bottomContent.text = text;
+                if (text) {
+                    bottomContent.text = text;
+                } else {
+                    // 如果文字為空，移除下方內容
+                    const index = bubble.body.contents.indexOf(bottomContent);
+                    if (index > -1) {
+                        bubble.body.contents.splice(index, 1);
+                    }
+                }
             }
             
             templates[currentTemplateIndex].carouselData = carouselData;
@@ -1190,12 +1352,10 @@ export async function onRequest(context) {
             const bubble = carouselData.contents[currentTabIndex];
             const buildingBox = bubble.body.contents.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
             if (buildingBox?.contents?.[index]) {
-                if (confirm('確定要刪除這個棟別嗎？')) {
-                    buildingBox.contents.splice(index, 1);
-                    templates[currentTemplateIndex].carouselData = carouselData;
-                    loadTabContent();
-                    updatePreview();
-                }
+                buildingBox.contents.splice(index, 1);
+                templates[currentTemplateIndex].carouselData = carouselData;
+                loadTabContent();
+                updatePreview();
             }
         }
 
