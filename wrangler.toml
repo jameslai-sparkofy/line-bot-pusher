@@ -60,7 +60,7 @@ database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 bucket_name = "line-bot-images"
 binding = "R2_IMAGES"
 
-# 預覽環境 (對應 Pages 的 preview)
+# 預覽環境 (對應 Pages 的 preview - 所有非 main 分支)
 [env.preview.vars]
 NODE_ENV = "preview"
 PORT = "8787"
