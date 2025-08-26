@@ -6,6 +6,14 @@ compatibility_flags = ["nodejs_compat"]
 # Pages 配置
 pages_build_output_dir = "deploy"
 
+# 默認環境變數 (所有分支都會使用)
+[vars]
+NODE_ENV = "development"
+PORT = "8787"
+MAX_PUSH_RATE = "500"
+MAX_MESSAGE_LENGTH = "2000"
+LOG_LEVEL = "debug"
+
 # 環境變數
 [env.production.vars]
 NODE_ENV = "production"
