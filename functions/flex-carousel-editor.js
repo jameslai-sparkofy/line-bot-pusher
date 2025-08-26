@@ -810,7 +810,7 @@ export async function onRequest(context) {
         // 取得氣泡標題
         function getBubbleTitle(bubble, index) {
             // 查找主標題（第一個 text 元素且 weight 為 bold）
-            const titleContent = bubble.body?.contents?.find(c => 
+            let titleContent = bubble.body?.contents?.find(c => 
                 c.type === 'text' && c.weight === 'bold'
             );
             
@@ -892,7 +892,7 @@ export async function onRequest(context) {
             
             // 內容設定 - 按順序定義內容元素
             const body = bubble.body?.contents || [];
-            const titleContent = body[0]; // 主標題（第一個元素）
+            let titleContent = body[0]; // 主標題（第一個元素）
             const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap); // 副標題（普通文字）
             const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm'); // 棟別box
             const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa'); // 下方內容（有wrap的文字，但不是日期）
@@ -1043,7 +1043,7 @@ export async function onRequest(context) {
         // 更新主標題
         function updateMainTitle(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            const titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
+            let titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
             if (titleContent) {
                 titleContent.text = text;
                 templates[currentTemplateIndex].carouselData = carouselData;
@@ -1124,7 +1124,7 @@ export async function onRequest(context) {
         function updateBottomContent(text) {
             const bubble = carouselData.contents[currentTabIndex];
             // 使用更精確的選擇器，避免與日期資訊衝突
-            const titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
+            let titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
             const subtitleContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
             let bottomContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa');
             
@@ -1388,7 +1388,7 @@ export async function onRequest(context) {
             carouselData.contents.forEach((bubble, index) => {
                 const hero = bubble.hero;
                 const body = bubble.body?.contents || [];
-                const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
+                let titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
                 const title = titleContent?.text || '分頁 ' + (index + 1);
                 const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
                 const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
@@ -1408,7 +1408,7 @@ export async function onRequest(context) {
                 html += '<div class="bubble-title">' + title + '</div>';
                 
                 // 副標題
-                const titleContent = body[0];
+                let titleContent = body[0];
                 const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
                 if (subtitleContent?.text) {
                     html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + subtitleContent.text + '</div>';
