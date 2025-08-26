@@ -810,7 +810,7 @@ export async function onRequest(context) {
         // 取得氣泡標題
         function getBubbleTitle(bubble, index) {
             // 查找主標題（第一個 text 元素且 weight 為 bold）
-            let titleContent = bubble.body?.contents?.find(c => 
+            const titleContent = bubble.body?.contents?.find(c => 
                 c.type === 'text' && c.weight === 'bold'
             );
             
@@ -892,10 +892,10 @@ export async function onRequest(context) {
             
             // 內容設定 - 按順序定義內容元素
             const body = bubble.body?.contents || [];
-            let titleContent = body[0]; // 主標題（第一個元素）
+            const titleContent = body[0]; // 主標題（第一個元素）
             const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap); // 副標題（普通文字）
             const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm'); // 棟別box
-            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa'); // 下方內容（有wrap的文字，但不是日期）
+            const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true); // 下方內容（有wrap的文字）
             const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs'); // 日期資訊（灰色小字）
             
             html += '<div class="form-section">';
@@ -1043,7 +1043,7 @@ export async function onRequest(context) {
         // 更新主標題
         function updateMainTitle(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            let titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
+            const titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
             if (titleContent) {
                 titleContent.text = text;
                 templates[currentTemplateIndex].carouselData = carouselData;
@@ -1058,7 +1058,7 @@ export async function onRequest(context) {
             let dateContent = bubble.body.contents.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
             
             if (!dateContent && text) {
-                // 如果不存在日期資訊元素，在最後創建一個
+                // 如果不存在日期資訊元素，在最��創建一個
                 dateContent = {
                     "type": "text",
                     "text": text,
@@ -1123,10 +1123,7 @@ export async function onRequest(context) {
         // 更新下方內容
         function updateBottomContent(text) {
             const bubble = carouselData.contents[currentTabIndex];
-            // 使用更精確的選擇器，避免與日期資訊衝突
-            let titleContent = bubble.body.contents.find(c => c.type === 'text' && c.weight === 'bold');
-            const subtitleContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
-            let bottomContent = bubble.body.contents.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa');
+            let bottomContent = bubble.body.contents.find(c => c.type === 'text' && c.wrap === true);
             
             if (!bottomContent && text) {
                 // 如果不存在下方內容元素，在日期資訊前創建一個
@@ -1388,7 +1385,7 @@ export async function onRequest(context) {
             carouselData.contents.forEach((bubble, index) => {
                 const hero = bubble.hero;
                 const body = bubble.body?.contents || [];
-                let titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
+                const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
                 const title = titleContent?.text || '分頁 ' + (index + 1);
                 const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
                 const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
@@ -1408,8 +1405,7 @@ export async function onRequest(context) {
                 html += '<div class="bubble-title">' + title + '</div>';
                 
                 // 副標題
-                let titleContent = body[0];
-                const subtitleContent = body.find(c => c.type === 'text' && c !== titleContent && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
+                const subtitleContent = body.find(c => c.type === 'text' && c !== body[0] && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
                 if (subtitleContent?.text) {
                     html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + subtitleContent.text + '</div>';
                 }
@@ -1431,13 +1427,12 @@ export async function onRequest(context) {
                 }
                 
                 // 下方內容
-                const bottomContent = body.find(c => c.type === 'text' && c !== titleContent && c !== subtitleContent && c.wrap === true && c.color !== '#aaaaaa');
+                const bottomContent = body.find(c => c.type === 'text' && c.wrap === true);
                 if (bottomContent?.text) {
                     html += '<div style="font-size: 11px; color: #555; margin-top: 6px; line-height: 1.3;">' + bottomContent.text + '</div>';
                 }
                 
                 // 日期資訊
-                const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
                 if (dateContent?.text) {
                     html += '<div style="font-size: 11px; color: #aaa; margin-top: 8px;">' + dateContent.text + '</div>';
                 }
@@ -1469,7 +1464,7 @@ export async function onRequest(context) {
         function showJsonPreview() {
             const jsonWindow = window.open('', '_blank', 'width=800,height=600');
             const jsonString = JSON.stringify(carouselData, null, 2);
-            const jsonEscaped = jsonString.replace(/'/g, "\\\\'");
+            const jsonEscaped = jsonString.replace(/'/g, "\\'");
             
             jsonWindow.document.write(
                 '<html><head><title>Flex Carousel JSON</title></head>' +
@@ -1478,7 +1473,7 @@ export async function onRequest(context) {
                 '<pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow: auto; white-space: pre-wrap; max-height: 80vh;">' +
                 jsonString +
                 '</pre><br>' +
-                '<button onclick="navigator.clipboard.writeText(\\'' + jsonEscaped + '\\'); alert(\\'JSON 已複製到剪貼簿!\\');" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">📋 複製 JSON</button>' +
+                '<button onclick="navigator.clipboard.writeText(\'' + jsonEscaped + '\'); alert(\'JSON 已複製到剪貼簿!\');" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">📋 複製 JSON</button>' +
                 '<button onclick="window.close();" style="margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">✕ 關閉</button>' +
                 '</body></html>'
             );
