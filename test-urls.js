@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   const urls = [
     { name: '主域名', url: 'https://line-bot-pusher.pages.dev/flex-carousel-editor' },
     { name: '特定版本', url: 'https://46d566b2.line-bot-pusher.pages.dev/flex-carousel-editor' },
-    { name: '開發環境', url: 'https://dev.line-bot-pusher.pages.dev/flex-carousel-editor' }
+    { name: '開發環境', url: 'https://develop.line-bot-pusher.pages.dev/flex-carousel-editor' }
   ];
   
   for (const { name, url } of urls) {
