@@ -18,7 +18,22 @@ async function getTemplates(context) {
   const { env } = context;
   
   try {
-    const templates = await env.DB.prepare(`
+    // 嘗試獲取資料庫連接，支援多種綁定名稱
+    const db = env.DB || env.LINE_BOT_DB;
+    
+    if (!db) {
+      return jsonResponse({
+        success: false,
+        error: 'Database not available',
+        debug: {
+          env_keys: Object.keys(env || {}),
+          has_DB: !!env.DB,
+          has_LINE_BOT_DB: !!env.LINE_BOT_DB
+        }
+      }, 500);
+    }
+
+    const templates = await db.prepare(`
       SELECT * FROM flex_message_templates 
       WHERE is_active = 1 
       ORDER BY updated_at DESC

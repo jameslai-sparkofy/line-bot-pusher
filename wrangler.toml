@@ -99,3 +99,31 @@ database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 [[env.develop.r2_buckets]]
 bucket_name = "line-bot-images"
 binding = "R2_IMAGES"
+
+# 嘗試為所有 preview/branch 環境配置資料庫
+[env.development.vars]
+NODE_ENV = "development"
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"  
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+[[env.development.d1_databases]]
+binding = "LINE_BOT_DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+# 額外的分支環境配置
+[env.staging.vars]
+NODE_ENV = "staging"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+[[env.staging.d1_databases]]
+binding = "LINE_BOT_DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
