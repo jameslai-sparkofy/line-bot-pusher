@@ -115,73 +115,214 @@
             background: #e9ecef;
         }
 
-        /* 變數管理樣式 */
-        .variable-section {
-            padding: 15px;
-            display: none;
+        /* 新的變數管理樣式 */
+        .variable-floating-panel {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 350px;
+            max-height: calc(100vh - 100px);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            overflow: hidden;
         }
 
-        .variable-section.active {
-            display: block;
+        .variable-panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .variable-group {
-            margin-bottom: 20px;
+        .variable-panel-header h4 {
+            margin: 0;
+            font-size: 16px;
         }
 
-        .variable-label {
+        .variable-panel-content {
+            padding: 20px;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .variable-section-title {
             font-size: 14px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 8px;
-            display: block;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9ecef;
         }
 
-        .variable-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .variable-json {
-            width: 100%;
-            height: 80px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: monospace;
-            resize: vertical;
-        }
-
-        .json-hint {
-            font-size: 11px;
-            color: #666;
-            margin-top: 2px;
-            line-height: 1.3;
-        }
-
-        .template-preset {
+        .variable-row {
             margin-bottom: 15px;
         }
 
-        .preset-btn {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .variable-row label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .variable-input-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .variable-input-group input,
+        .variable-input-group textarea {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .variable-input-group textarea {
+            min-height: 60px;
+            max-height: 120px;
+        }
+
+        .insert-var-btn {
+            padding: 8px 12px;
+            background: #667eea;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .insert-var-btn:hover {
+            background: #5a67d8;
+        }
+
+        /* 表格編輯器樣式 */
+        .table-editor-header {
             margin-bottom: 10px;
         }
 
-        .preset-btn:hover {
-            opacity: 0.9;
+        .add-row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .add-row-btn:hover {
+            background: #218838;
+        }
+
+        .table-editor {
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .table-row {
+            display: flex;
+            border-bottom: 1px solid #e1e8ed;
+            background: white;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-row:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .table-cell {
+            flex: 1;
+            padding: 8px 12px;
+            border-right: 1px solid #e1e8ed;
+            display: flex;
+            align-items: center;
+        }
+
+        .table-cell:last-child {
+            border-right: none;
+        }
+
+        .table-cell input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            padding: 2px;
+        }
+
+        .table-cell input:focus {
+            outline: 1px solid #667eea;
+            border-radius: 2px;
+        }
+
+        .table-cell-header {
+            background: #f1f3f4;
+            font-weight: 600;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .delete-row-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .delete-row-btn:hover {
+            background: #c82333;
+        }
+
+        /* 變數模式指示器 */
+        .variable-mode-active {
+            background: #28a745 !important;
+            color: white !important;
+            border-color: #28a745 !important;
+        }
+
+        /* 變數高亮樣式 */
+        .variable-highlight {
+            background-color: #e7f3ff;
+            color: #1976d2;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        /* 插入變數按鈕 */
+        .insert-variable-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            color: #667eea;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .insert-variable-btn:hover {
+            background: #667eea;
+            color: white;
         }
 
         .panel-header {
@@ -196,13 +337,6 @@
             overflow-y: auto;
         }
 
-        .panel-section {
-            display: block;
-        }
-
-        .panel-section.active {
-            display: block;
-        }
 
         .template-item {
             padding: 12px 15px;
@@ -518,68 +652,93 @@
     <div class="editor-main">
         <!-- 左側模板面板 -->
         <div class="template-panel">
-            <!-- 面板標籤 -->
-            <div class="panel-tabs">
-                <button class="panel-tab active" onclick="switchPanelTab('templates')">📋 模板</button>
-                <button class="panel-tab" onclick="switchPanelTab('variables')">🔧 變數</button>
-            </div>
-
             <!-- 模板管理區 -->
-            <div id="templates-panel" class="panel-section active">
-                <div class="panel-header">
-                    <div style="display: flex; gap: 5px; justify-content: center; margin-top: 10px;">
+            <div class="panel-header">
+                <div class="panel-title">📋 模板管理</div>
+                <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                    <div style="display: flex; gap: 5px;">
                         <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
                         <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
                     </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn" onclick="createVariableTemplate()" style="background: #667eea; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">🔧 建立變數模板</button>
+                        <button class="btn" onclick="toggleVariableMode()" id="variable-mode-btn" style="background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; font-size: 12px;">🎯 變數模式</button>
+                    </div>
                 </div>
-                <div class="template-list" id="template-list">
-                    <!-- 動態載入模板列表 -->
+            </div>
+            <div class="template-list" id="template-list">
+                <!-- 動態載入模板列表 -->
+            </div>
+            
+            <!-- 變數管理浮動面板 -->
+            <div id="variable-panel" class="variable-floating-panel" style="display: none;">
+                <div class="variable-panel-header">
+                    <h4>🎯 變數管理</h4>
+                    <button onclick="closeVariablePanel()" style="background: none; border: none; font-size: 16px; cursor: pointer;">×</button>
+                </div>
+                <div class="variable-panel-content">
+                    <!-- 基本變數 -->
+                    <div class="variable-section-title">📝 基本資訊</div>
+                    <div class="variable-row">
+                        <label>專案名稱</label>
+                        <div class="variable-input-group">
+                            <input type="text" id="var-project-name" placeholder="輸入專案名稱" onchange="updateVariables()">
+                            <button onclick="insertVariable('project_name')" class="insert-var-btn">{x}</button>
+                        </div>
+                    </div>
+                    <div class="variable-row">
+                        <label>總進度</label>
+                        <div class="variable-input-group">
+                            <input type="text" id="var-total-progress" placeholder="例: 78%" onchange="updateVariables()">
+                            <button onclick="insertVariable('total_progress')" class="insert-var-btn">{x}</button>
+                        </div>
+                    </div>
+                    <div class="variable-row">
+                        <label>負責人</label>
+                        <div class="variable-input-group">
+                            <input type="text" id="var-manager" placeholder="輸入負責人姓名" onchange="updateVariables()">
+                            <button onclick="insertVariable('manager')" class="insert-var-btn">{x}</button>
+                        </div>
+                    </div>
+                    <div class="variable-row">
+                        <label>日期</label>
+                        <div class="variable-input-group">
+                            <input type="date" id="var-date" onchange="updateVariables()">
+                            <button onclick="insertVariable('date')" class="insert-var-btn">{x}</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 進階變數 -->
+                    <div class="variable-section-title">🏗️ 棟別進度</div>
+                    <div class="building-progress-editor">
+                        <div class="table-editor-header">
+                            <button onclick="addBuildingRow()" class="add-row-btn">+ 新增棟別</button>
+                        </div>
+                        <div id="building-progress-table" class="table-editor">
+                            <!-- 動態生成表格 -->
+                        </div>
+                    </div>
+                    
+                    <div class="variable-section-title">📅 今日進度</div>
+                    <div class="today-progress-editor">
+                        <div class="table-editor-header">
+                            <button onclick="addTodayProgressRow()" class="add-row-btn">+ 新增進度</button>
+                        </div>
+                        <div id="today-progress-table" class="table-editor">
+                            <!-- 動態生成表格 -->
+                        </div>
+                    </div>
+                    
+                    <div class="variable-row">
+                        <label>工作日誌</label>
+                        <div class="variable-input-group">
+                            <textarea id="var-work-log" placeholder="輸入今日工作摘要" onchange="updateVariables()" style="resize: vertical;"></textarea>
+                            <button onclick="insertVariable('work_log')" class="insert-var-btn">{x}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 變數管理區 -->
-            <div id="variables-panel" class="variable-section">
-                <div class="template-preset">
-                    <button class="preset-btn" onclick="loadVariableTemplate()">📋 載入變數模板</button>
-                </div>
-                
-                <div class="variable-group">
-                    <label class="variable-label">專案名稱</label>
-                    <input type="text" id="var-project-name" class="variable-input" placeholder="輸入專案名稱" onchange="updateVariables()">
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">總進度</label>
-                    <input type="text" id="var-total-progress" class="variable-input" placeholder="例: 78%" onchange="updateVariables()">
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">負責人</label>
-                    <input type="text" id="var-manager" class="variable-input" placeholder="輸入負責人姓名" onchange="updateVariables()">
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">日期</label>
-                    <input type="date" id="var-date" class="variable-input" onchange="updateVariables()">
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">棟別進度 (JSON)</label>
-                    <textarea id="var-building-progress" class="variable-json" placeholder='[{"name":"A棟","progress":"95%"},{"name":"B棟","progress":"80%"}]' onchange="updateVariables()"></textarea>
-                    <div class="json-hint">格式: [{"name":"棟名","progress":"進度%"}]</div>
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">今日進度 (JSON)</label>
-                    <textarea id="var-today-progress" class="variable-json" placeholder='[{"building":"B棟","work":"3FB4","url":"https://example.com"}]' onchange="updateVariables()"></textarea>
-                    <div class="json-hint">格式: [{"building":"棟名","work":"工作內容","url":"連結"}]</div>
-                </div>
-
-                <div class="variable-group">
-                    <label class="variable-label">工作日誌</label>
-                    <textarea id="var-work-log" class="variable-input" style="height: 60px; resize: vertical;" placeholder="輸入今日工作摘要" onchange="updateVariables()"></textarea>
-                </div>
-            </div>
         </div>
 
         <!-- 中間內容編輯區 -->
@@ -918,26 +1077,53 @@
             }
         };
 
-        // ========== 變數管理功能 ==========
+        // ========== 新的變數管理功能 ==========
         
-        // 切換面板標籤
-        function switchPanelTab(tab) {
-            // 更新標籤狀態
-            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+        let isVariableMode = false;
+        let buildingProgressData = [];
+        let todayProgressData = [];
+        
+        // 切換變數模式
+        function toggleVariableMode() {
+            isVariableMode = !isVariableMode;
+            const btn = document.getElementById('variable-mode-btn');
+            const panel = document.getElementById('variable-panel');
             
-            // 顯示對應面板
-            document.querySelectorAll('.panel-section, .variable-section').forEach(s => s.style.display = 'none');
-            
-            if (tab === 'templates') {
-                document.getElementById('templates-panel').style.display = 'block';
-            } else if (tab === 'variables') {
-                document.getElementById('variables-panel').style.display = 'block';
+            if (isVariableMode) {
+                btn.textContent = '✓ 變數模式';
+                btn.classList.add('variable-mode-active');
+                panel.style.display = 'block';
+                
+                // 初始化變數管理面板
+                initializeVariablePanel();
+                
+                // 在編輯表單中新增插入變數按鈕
+                addVariableButtonsToForm();
+            } else {
+                btn.textContent = '🎯 變數模式';
+                btn.classList.remove('variable-mode-active');
+                panel.style.display = 'none';
+                
+                // 移除插入變數按鈕
+                removeVariableButtonsFromForm();
             }
         }
         
-        // 載入變數模板
-        function loadVariableTemplate() {
+        // 關閉變數面板
+        function closeVariablePanel() {
+            isVariableMode = false;
+            const btn = document.getElementById('variable-mode-btn');
+            const panel = document.getElementById('variable-panel');
+            
+            btn.textContent = '🎯 變數模式';
+            btn.classList.remove('variable-mode-active');
+            panel.style.display = 'none';
+            
+            removeVariableButtonsFromForm();
+        }
+        
+        // 建立變數模板
+        function createVariableTemplate() {
             // 新增變數模板
             const newTemplate = {
                 id: Date.now(),
@@ -953,31 +1139,64 @@
             updateTabs();
             updatePreview();
             
+            // 自動開啟變數模式
+            if (!isVariableMode) {
+                toggleVariableMode();
+            }
+            
             // 初始化變數值
             initializeVariableValues();
             
-            alert('變數模板已載入！請在變數頁面編輯內容。');
+            alert('變數模板已建立！正在開啟變數管理面板。');
         }
         
-        // 初始化變數值
-        function initializeVariableValues() {
-            document.getElementById('var-project-name').value = '勝美 - 建功段';
-            document.getElementById('var-total-progress').value = '78%';
-            document.getElementById('var-manager').value = '張經理';
-            document.getElementById('var-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('var-building-progress').value = JSON.stringify([
-                {"name": "A棟", "progress": "95%"},
-                {"name": "B棟", "progress": "80%"},
-                {"name": "C棟", "progress": "60%"}
-            ], null, 2);
-            document.getElementById('var-today-progress').value = JSON.stringify([
-                {"building": "B棟", "work": "3FB4樓版", "url": "https://example.com/b3fb4"},
-                {"building": "C棟", "work": "地基施工", "url": "https://example.com/foundation"}
-            ], null, 2);
-            document.getElementById('var-work-log').value = '今日完成B棟3樓至4樓梁柱施工，C棟地基開挖';
+        // 初始化變數面板
+        function initializeVariablePanel() {
+            // 初始化基本變數
+            if (!document.getElementById('var-project-name').value) {
+                document.getElementById('var-project-name').value = '勝美 - 建功段';
+            }
+            if (!document.getElementById('var-total-progress').value) {
+                document.getElementById('var-total-progress').value = '78%';
+            }
+            if (!document.getElementById('var-manager').value) {
+                document.getElementById('var-manager').value = '張經理';
+            }
+            if (!document.getElementById('var-date').value) {
+                document.getElementById('var-date').value = new Date().toISOString().split('T')[0];
+            }
+            if (!document.getElementById('var-work-log').value) {
+                document.getElementById('var-work-log').value = '今日完成B棟3樓至4樓梁柱施工，C棟地基開挖';
+            }
+            
+            // 初始化棟別進度
+            if (buildingProgressData.length === 0) {
+                buildingProgressData = [
+                    {name: "A棟", progress: "95%"},
+                    {name: "B棟", progress: "80%"},
+                    {name: "C棟", progress: "60%"}
+                ];
+            }
+            
+            // 初始化今日進度
+            if (todayProgressData.length === 0) {
+                todayProgressData = [
+                    {building: "B棟", work: "3FB4樓版", url: "https://example.com/b3fb4"},
+                    {building: "C棟", work: "地基施工", url: "https://example.com/foundation"}
+                ];
+            }
+            
+            // 渲染表格
+            renderBuildingProgressTable();
+            renderTodayProgressTable();
             
             // 更新變數
             updateVariables();
+        }
+        
+        // 初始化變數值(保持相容性)
+        function initializeVariableValues() {
+            initializeVariablePanel();
         }
         
         // 更新變數
@@ -989,22 +1208,9 @@
             templateVariables.date = document.getElementById('var-date').value || new Date().toISOString().split('T')[0];
             templateVariables.work_log = document.getElementById('var-work-log').value || '';
             
-            // 解析 JSON 變數
-            try {
-                const buildingProgressText = document.getElementById('var-building-progress').value;
-                templateVariables.building_progress = buildingProgressText ? JSON.parse(buildingProgressText) : [];
-            } catch (e) {
-                console.warn('棟別進度 JSON 格式錯誤:', e);
-                templateVariables.building_progress = [];
-            }
-            
-            try {
-                const todayProgressText = document.getElementById('var-today-progress').value;
-                templateVariables.today_progress = todayProgressText ? JSON.parse(todayProgressText) : [];
-            } catch (e) {
-                console.warn('今日進度 JSON 格式錯誤:', e);
-                templateVariables.today_progress = [];
-            }
+            // 使用表格數據
+            templateVariables.building_progress = buildingProgressData;
+            templateVariables.today_progress = todayProgressData;
             
             // 如果目前模板含有變數，更新預覽
             if (templates.length > 0 && hasVariables(carouselData)) {
@@ -1017,6 +1223,28 @@
         function hasVariables(data) {
             const str = JSON.stringify(data);
             return str.includes('{{') && str.includes('}}');
+        }
+        
+        // 插入變數到目前焦點的輸入框
+        function insertVariable(varName) {
+            const activeElement = document.activeElement;
+            const variableText = `{{${varName}}}`;
+            
+            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                const start = activeElement.selectionStart;
+                const end = activeElement.selectionEnd;
+                const text = activeElement.value;
+                
+                activeElement.value = text.substring(0, start) + variableText + text.substring(end);
+                activeElement.setSelectionRange(start + variableText.length, start + variableText.length);
+                activeElement.focus();
+                
+                // 觸發 onchange 事件
+                const event = new Event('change', { bubbles: true });
+                activeElement.dispatchEvent(event);
+            } else {
+                alert('請先點擊要插入變數的輸入框');
+            }
         }
         
         // 將變數應用到模板
@@ -1150,6 +1378,112 @@
                     }
                 ]
             }));
+        }
+
+        // ========== 表格編輯器功能 ==========
+        
+        // 渲染棟別進度表格
+        function renderBuildingProgressTable() {
+            const table = document.getElementById('building-progress-table');
+            let html = '';
+            
+            // 表格標頭
+            html += '<div class="table-row">';
+            html += '<div class="table-cell table-cell-header">棟名</div>';
+            html += '<div class="table-cell table-cell-header">進度</div>';
+            html += '<div class="table-cell table-cell-header" style="flex: 0 0 60px;">操作</div>';
+            html += '</div>';
+            
+            // 数据行
+            buildingProgressData.forEach((building, index) => {
+                html += '<div class="table-row">';
+                html += `<div class="table-cell"><input type="text" value="${building.name || ''}" onchange="updateBuildingProgress(${index}, 'name', this.value)"></div>`;
+                html += `<div class="table-cell"><input type="text" value="${building.progress || ''}" onchange="updateBuildingProgress(${index}, 'progress', this.value)" placeholder="例: 85%"></div>`;
+                html += `<div class="table-cell" style="flex: 0 0 60px;"><button class="delete-row-btn" onclick="deleteBuildingRow(${index})">×</button></div>`;
+                html += '</div>';
+            });
+            
+            table.innerHTML = html;
+        }
+        
+        // 渲染今日進度表格
+        function renderTodayProgressTable() {
+            const table = document.getElementById('today-progress-table');
+            let html = '';
+            
+            // 表格標頭
+            html += '<div class="table-row">';
+            html += '<div class="table-cell table-cell-header">棟別</div>';
+            html += '<div class="table-cell table-cell-header">工作內容</div>';
+            html += '<div class="table-cell table-cell-header">連結</div>';
+            html += '<div class="table-cell table-cell-header" style="flex: 0 0 60px;">操作</div>';
+            html += '</div>';
+            
+            // 数据行
+            todayProgressData.forEach((progress, index) => {
+                html += '<div class="table-row">';
+                html += `<div class="table-cell"><input type="text" value="${progress.building || ''}" onchange="updateTodayProgress(${index}, 'building', this.value)"></div>`;
+                html += `<div class="table-cell"><input type="text" value="${progress.work || ''}" onchange="updateTodayProgress(${index}, 'work', this.value)"></div>`;
+                html += `<div class="table-cell"><input type="url" value="${progress.url || ''}" onchange="updateTodayProgress(${index}, 'url', this.value)" placeholder="https://..."></div>`;
+                html += `<div class="table-cell" style="flex: 0 0 60px;"><button class="delete-row-btn" onclick="deleteTodayProgressRow(${index})">×</button></div>`;
+                html += '</div>';
+            });
+            
+            table.innerHTML = html;
+        }
+        
+        // 新增棟別行
+        function addBuildingRow() {
+            buildingProgressData.push({name: '', progress: ''});
+            renderBuildingProgressTable();
+            updateVariables();
+        }
+        
+        // 新增今日進度行
+        function addTodayProgressRow() {
+            todayProgressData.push({building: '', work: '', url: ''});
+            renderTodayProgressTable();
+            updateVariables();
+        }
+        
+        // 更新棟別進度
+        function updateBuildingProgress(index, field, value) {
+            if (buildingProgressData[index]) {
+                buildingProgressData[index][field] = value;
+                updateVariables();
+            }
+        }
+        
+        // 更新今日進度
+        function updateTodayProgress(index, field, value) {
+            if (todayProgressData[index]) {
+                todayProgressData[index][field] = value;
+                updateVariables();
+            }
+        }
+        
+        // 刪除棟別行
+        function deleteBuildingRow(index) {
+            buildingProgressData.splice(index, 1);
+            renderBuildingProgressTable();
+            updateVariables();
+        }
+        
+        // 刪除今日進度行
+        function deleteTodayProgressRow(index) {
+            todayProgressData.splice(index, 1);
+            renderTodayProgressTable();
+            updateVariables();
+        }
+        
+        // 在編輯表單中新增插入變數按鈕
+        function addVariableButtonsToForm() {
+            // 這個功能將在下一階段實作
+        }
+        
+        // 移除插入變數按鈕
+        function removeVariableButtonsFromForm() {
+            // 這個功能將在下一階段實作
         }
 
         // 初始化編輯器
