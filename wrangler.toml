@@ -42,6 +42,11 @@ binding = "DB"
 database_name = "line-bot-database"
 database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 
+[[d1_databases]]
+binding = "LINE_BOT_DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
 # R2 存儲配置
 [[r2_buckets]]
 bucket_name = "line-bot-images"
