@@ -65,7 +65,7 @@
 
         /* 左側模板選擇面板 */
         .template-panel {
-            width: 280px;
+            width: 320px;
             background: white;
             border-right: 1px solid #e1e8ed;
             display: flex;
@@ -85,6 +85,105 @@
             margin-bottom: 10px;
         }
 
+        /* 面板標籤 */
+        .panel-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 14px;
+            background: transparent;
+            border: none;
+        }
+
+        .panel-tab.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .panel-tab:hover {
+            background: #e9ecef;
+        }
+
+        /* 變數管理樣式 */
+        .variable-section {
+            padding: 15px;
+            display: none;
+        }
+
+        .variable-section.active {
+            display: block;
+        }
+
+        .variable-group {
+            margin-bottom: 20px;
+        }
+
+        .variable-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .variable-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .variable-json {
+            width: 100%;
+            height: 80px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .json-hint {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+
+        .template-preset {
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .preset-btn:hover {
+            opacity: 0.9;
+        }
+
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -95,6 +194,14 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
+        }
+
+        .panel-section {
+            display: block;
+        }
+
+        .panel-section.active {
+            display: block;
         }
 
         .template-item {
@@ -411,15 +518,67 @@
     <div class="editor-main">
         <!-- 左側模板面板 -->
         <div class="template-panel">
-            <div class="panel-header">
-                <div class="panel-title">📋 模板</div>
-                <div style="display: flex; gap: 5px;">
-                    <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
-                    <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
+            <!-- 面板標籤 -->
+            <div class="panel-tabs">
+                <button class="panel-tab active" onclick="switchPanelTab('templates')">📋 模板</button>
+                <button class="panel-tab" onclick="switchPanelTab('variables')">🔧 變數</button>
+            </div>
+
+            <!-- 模板管理區 -->
+            <div id="templates-panel" class="panel-section active">
+                <div class="panel-header">
+                    <div style="display: flex; gap: 5px; justify-content: center; margin-top: 10px;">
+                        <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
+                        <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
+                    </div>
+                </div>
+                <div class="template-list" id="template-list">
+                    <!-- 動態載入模板列表 -->
                 </div>
             </div>
-            <div class="template-list" id="template-list">
-                <!-- 動態載入模板列表 -->
+
+            <!-- 變數管理區 -->
+            <div id="variables-panel" class="variable-section">
+                <div class="template-preset">
+                    <button class="preset-btn" onclick="loadVariableTemplate()">📋 載入變數模板</button>
+                </div>
+                
+                <div class="variable-group">
+                    <label class="variable-label">專案名稱</label>
+                    <input type="text" id="var-project-name" class="variable-input" placeholder="輸入專案名稱" onchange="updateVariables()">
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">總進度</label>
+                    <input type="text" id="var-total-progress" class="variable-input" placeholder="例: 78%" onchange="updateVariables()">
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">負責人</label>
+                    <input type="text" id="var-manager" class="variable-input" placeholder="輸入負責人姓名" onchange="updateVariables()">
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">日期</label>
+                    <input type="date" id="var-date" class="variable-input" onchange="updateVariables()">
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">棟別進度 (JSON)</label>
+                    <textarea id="var-building-progress" class="variable-json" placeholder='[{"name":"A棟","progress":"95%"},{"name":"B棟","progress":"80%"}]' onchange="updateVariables()"></textarea>
+                    <div class="json-hint">格式: [{"name":"棟名","progress":"進度%"}]</div>
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">今日進度 (JSON)</label>
+                    <textarea id="var-today-progress" class="variable-json" placeholder='[{"building":"B棟","work":"3FB4","url":"https://example.com"}]' onchange="updateVariables()"></textarea>
+                    <div class="json-hint">格式: [{"building":"棟名","work":"工作內容","url":"連結"}]</div>
+                </div>
+
+                <div class="variable-group">
+                    <label class="variable-label">工作日誌</label>
+                    <textarea id="var-work-log" class="variable-input" style="height: 60px; resize: vertical;" placeholder="輸入今日工作摘要" onchange="updateVariables()"></textarea>
+                </div>
             </div>
         </div>
 
@@ -464,6 +623,165 @@
         let carouselData = {
             type: 'carousel',
             contents: []
+        };
+
+        // 變數管理
+        let templateVariables = {
+            project_name: '',
+            total_progress: '',
+            manager: '',
+            date: '',
+            building_progress: [],
+            today_progress: [],
+            work_log: ''
+        };
+
+        // 變數模板
+        const variableTemplate = {
+            "type": "carousel",
+            "contents": [
+                // 第一頁：今日進度
+                {
+                    "type": "bubble",
+                    "hero": {
+                        "type": "image",
+                        "url": "https://developers-resource.landpress.line.me/fx/img/01_2_restaurant.png",
+                        "size": "full",
+                        "aspectRatio": "20:13",
+                        "aspectMode": "cover"
+                    },
+                    "body": {
+                        "type": "box",
+                        "layout": "vertical",
+                        "spacing": "md",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": "{{project_name}}",
+                                "size": "xl",
+                                "weight": "bold"
+                            },
+                            {
+                                "type": "text",
+                                "text": "今日進度報告",
+                                "size": "md",
+                                "color": "#666666",
+                                "margin": "sm"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "spacing": "sm",
+                                "margin": "lg",
+                                "contents": []
+                            },
+                            {
+                                "type": "separator",
+                                "margin": "lg"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "margin": "lg",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "負責人：",
+                                        "size": "sm",
+                                        "color": "#aaaaaa",
+                                        "flex": 0
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "{{manager}}",
+                                        "size": "sm",
+                                        "color": "#666666",
+                                        "wrap": true
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "text",
+                                "text": "{{date}}",
+                                "size": "xs",
+                                "color": "#aaaaaa",
+                                "margin": "sm"
+                            }
+                        ]
+                    }
+                },
+                // 第二頁：總進度與棟別進度
+                {
+                    "type": "bubble",
+                    "hero": {
+                        "type": "image",
+                        "url": "https://developers-resource.landpress.line.me/fx/img/01_2_restaurant.png",
+                        "size": "full",
+                        "aspectRatio": "20:13",
+                        "aspectMode": "cover"
+                    },
+                    "body": {
+                        "type": "box",
+                        "layout": "vertical",
+                        "spacing": "md",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": "{{project_name}}",
+                                "size": "xl",
+                                "weight": "bold"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "margin": "lg",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "總進度：",
+                                        "size": "md",
+                                        "color": "#333333",
+                                        "flex": 0
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "{{total_progress}}",
+                                        "size": "xl",
+                                        "color": "#00B900",
+                                        "weight": "bold"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "separator",
+                                "margin": "lg"
+                            },
+                            {
+                                "type": "text",
+                                "text": "各棟進度",
+                                "size": "md",
+                                "weight": "bold",
+                                "margin": "lg"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "spacing": "sm",
+                                "contents": []
+                            },
+                            {
+                                "type": "text",
+                                "text": "{{date}} 更新",
+                                "size": "xs",
+                                "color": "#aaaaaa",
+                                "margin": "lg"
+                            }
+                        ]
+                    }
+                }
+            ]
         };
 
         // 預設模板
@@ -599,6 +917,240 @@
                 "paddingTop": "none"
             }
         };
+
+        // ========== 變數管理功能 ==========
+        
+        // 切換面板標籤
+        function switchPanelTab(tab) {
+            // 更新標籤狀態
+            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 顯示對應面板
+            document.querySelectorAll('.panel-section, .variable-section').forEach(s => s.style.display = 'none');
+            
+            if (tab === 'templates') {
+                document.getElementById('templates-panel').style.display = 'block';
+            } else if (tab === 'variables') {
+                document.getElementById('variables-panel').style.display = 'block';
+            }
+        }
+        
+        // 載入變數模板
+        function loadVariableTemplate() {
+            // 新增變數模板
+            const newTemplate = {
+                id: Date.now(),
+                name: '新變數模板',
+                carouselData: JSON.parse(JSON.stringify(variableTemplate))
+            };
+            
+            templates.push(newTemplate);
+            currentTemplateIndex = templates.length - 1;
+            carouselData = newTemplate.carouselData;
+            
+            renderTemplateList();
+            updateTabs();
+            updatePreview();
+            
+            // 初始化變數值
+            initializeVariableValues();
+            
+            alert('變數模板已載入！請在變數頁面編輯內容。');
+        }
+        
+        // 初始化變數值
+        function initializeVariableValues() {
+            document.getElementById('var-project-name').value = '勝美 - 建功段';
+            document.getElementById('var-total-progress').value = '78%';
+            document.getElementById('var-manager').value = '張經理';
+            document.getElementById('var-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('var-building-progress').value = JSON.stringify([
+                {"name": "A棟", "progress": "95%"},
+                {"name": "B棟", "progress": "80%"},
+                {"name": "C棟", "progress": "60%"}
+            ], null, 2);
+            document.getElementById('var-today-progress').value = JSON.stringify([
+                {"building": "B棟", "work": "3FB4樓版", "url": "https://example.com/b3fb4"},
+                {"building": "C棟", "work": "地基施工", "url": "https://example.com/foundation"}
+            ], null, 2);
+            document.getElementById('var-work-log').value = '今日完成B棟3樓至4樓梁柱施工，C棟地基開挖';
+            
+            // 更新變數
+            updateVariables();
+        }
+        
+        // 更新變數
+        function updateVariables() {
+            // 讀取變數值
+            templateVariables.project_name = document.getElementById('var-project-name').value || '專案名稱';
+            templateVariables.total_progress = document.getElementById('var-total-progress').value || '0%';
+            templateVariables.manager = document.getElementById('var-manager').value || '負責人';
+            templateVariables.date = document.getElementById('var-date').value || new Date().toISOString().split('T')[0];
+            templateVariables.work_log = document.getElementById('var-work-log').value || '';
+            
+            // 解析 JSON 變數
+            try {
+                const buildingProgressText = document.getElementById('var-building-progress').value;
+                templateVariables.building_progress = buildingProgressText ? JSON.parse(buildingProgressText) : [];
+            } catch (e) {
+                console.warn('棟別進度 JSON 格式錯誤:', e);
+                templateVariables.building_progress = [];
+            }
+            
+            try {
+                const todayProgressText = document.getElementById('var-today-progress').value;
+                templateVariables.today_progress = todayProgressText ? JSON.parse(todayProgressText) : [];
+            } catch (e) {
+                console.warn('今日進度 JSON 格式錯誤:', e);
+                templateVariables.today_progress = [];
+            }
+            
+            // 如果目前模板含有變數，更新預覽
+            if (templates.length > 0 && hasVariables(carouselData)) {
+                applyVariablesToTemplate();
+                updatePreview();
+            }
+        }
+        
+        // 檢查模板是否含有變數
+        function hasVariables(data) {
+            const str = JSON.stringify(data);
+            return str.includes('{{') && str.includes('}}');
+        }
+        
+        // 將變數應用到模板
+        function applyVariablesToTemplate() {
+            if (!carouselData || !carouselData.contents) return;
+            
+            carouselData.contents.forEach((bubble, pageIndex) => {
+                if (pageIndex === 0) {
+                    // 第一頁：今日進度
+                    applyVariablesToBubble(bubble, true);
+                } else if (pageIndex === 1) {
+                    // 第二頁：總進度
+                    applyVariablesToBubble(bubble, false);
+                }
+            });
+            
+            // 更新模板資料
+            if (templates[currentTemplateIndex]) {
+                templates[currentTemplateIndex].carouselData = carouselData;
+            }
+        }
+        
+        // 應用變數到单一 bubble
+        function applyVariablesToBubble(bubble, isTodayProgressPage) {
+            if (!bubble.body || !bubble.body.contents) return;
+            
+            bubble.body.contents.forEach(content => {
+                if (content.type === 'text') {
+                    // 替換文字變數
+                    content.text = replaceVariables(content.text);
+                } else if (content.type === 'box' && content.layout === 'vertical' && content.contents) {
+                    if (isTodayProgressPage && content.contents.length === 0) {
+                        // 第一頁的今日進度區域
+                        content.contents = generateTodayProgressItems(templateVariables.today_progress);
+                    } else if (!isTodayProgressPage && content.contents.length === 0) {
+                        // 第二頁的棟別進度區域
+                        content.contents = generateBuildingProgressItems(templateVariables.building_progress);
+                    }
+                } else if (content.type === 'box' && content.layout === 'baseline' && content.contents) {
+                    // 處理 baseline 內的文字
+                    content.contents.forEach(item => {
+                        if (item.type === 'text') {
+                            item.text = replaceVariables(item.text);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 替換變數
+        function replaceVariables(text) {
+            if (!text) return text;
+            
+            return text
+                .replace(/{{project_name}}/g, templateVariables.project_name)
+                .replace(/{{total_progress}}/g, templateVariables.total_progress)
+                .replace(/{{manager}}/g, templateVariables.manager)
+                .replace(/{{date}}/g, templateVariables.date)
+                .replace(/{{work_log}}/g, templateVariables.work_log);
+        }
+        
+        // 生成今日進度項目
+        function generateTodayProgressItems(todayProgressData) {
+            if (!Array.isArray(todayProgressData) || todayProgressData.length === 0) {
+                return [{
+                    "type": "text",
+                    "text": "無今日進度資料",
+                    "size": "sm",
+                    "color": "#aaaaaa"
+                }];
+            }
+            
+            return todayProgressData.map(item => ({
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": item.building || '未知',
+                        "size": "sm",
+                        "color": "#333333",
+                        "weight": "bold",
+                        "flex": 0
+                    },
+                    {
+                        "type": "text",
+                        "text": item.work || '未知工作',
+                        "size": "sm",
+                        "color": item.url ? "#0099CC" : "#666666",
+                        "wrap": true,
+                        "action": item.url ? {
+                            "type": "uri",
+                            "uri": item.url
+                        } : null
+                    }
+                ]
+            }));
+        }
+        
+        // 生成棟別進度項目
+        function generateBuildingProgressItems(buildingProgressData) {
+            if (!Array.isArray(buildingProgressData) || buildingProgressData.length === 0) {
+                return [{
+                    "type": "text",
+                    "text": "無棟別進度資料",
+                    "size": "sm",
+                    "color": "#aaaaaa"
+                }];
+            }
+            
+            return buildingProgressData.map(building => ({
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": building.name || '未知棟別',
+                        "size": "sm",
+                        "color": "#333333",
+                        "weight": "bold",
+                        "flex": 0
+                    },
+                    {
+                        "type": "text",
+                        "text": building.progress || '0%',
+                        "size": "sm",
+                        "color": "#00B900",
+                        "align": "end"
+                    }
+                ]
+            }));
+        }
 
         // 初始化編輯器
         async function init() {
