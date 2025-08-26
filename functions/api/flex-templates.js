@@ -32,7 +32,13 @@ async function getTemplates(context) {
     console.error('Get templates error:', error);
     return jsonResponse({
       success: false,
-      error: 'Failed to fetch templates'
+      error: 'Failed to fetch templates',
+      details: error.message,
+      env_check: {
+        has_DB: !!env.DB,
+        has_LINE_BOT_DB: !!env.LINE_BOT_DB,
+        env_keys: Object.keys(env || {})
+      }
     }, 500);
   }
 }
