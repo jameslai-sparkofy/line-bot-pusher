@@ -54,3 +54,19 @@ PORT = "8787"
 MAX_PUSH_RATE = "500"
 MAX_MESSAGE_LENGTH = "2000"
 LOG_LEVEL = "debug"
+
+# 預覽環境使用相同的資料庫
+[[env.preview.d1_databases]]
+binding = "LINE_BOT_DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+# 預覽環境使用相同的 R2 存儲
+[[env.preview.r2_buckets]]
+bucket_name = "line-bot-images"
+binding = "R2_IMAGES"
