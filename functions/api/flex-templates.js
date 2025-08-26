@@ -33,6 +33,24 @@ async function getTemplates(context) {
       }, 500);
     }
 
+    // 首先檢查表是否存在
+    const tableCheck = await db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='flex_message_templates'
+    `).all();
+
+    if (!tableCheck.results || tableCheck.results.length === 0) {
+      return jsonResponse({
+        success: false,
+        error: 'Table flex_message_templates does not exist',
+        debug: {
+          message: 'Database connected but table missing',
+          env_keys: Object.keys(env || {}),
+          has_DB: !!env.DB,
+          has_LINE_BOT_DB: !!env.LINE_BOT_DB
+        }
+      }, 500);
+    }
+
     const templates = await db.prepare(`
       SELECT * FROM flex_message_templates 
       WHERE is_active = 1 
