@@ -325,6 +325,103 @@
             color: white;
         }
 
+        /* 變數值編輯區樣式 */
+        .variable-values-section h5 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .variable-editor-row {
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .variable-editor-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .variable-editor-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .variable-editor-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 複雜變數編輯器 */
+        .complex-variable-editor {
+            margin-top: 10px;
+        }
+
+        .complex-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .complex-editor-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .add-item-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .add-item-btn:hover {
+            background: #218838;
+        }
+
+        .complex-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .complex-item input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .remove-item-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .remove-item-btn:hover {
+            background: #c82333;
+        }
+
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -636,6 +733,37 @@
         .bubble-button.share {
             background: #1db446;
         }
+
+        /* Toast 通知樣式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateX(300px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -660,9 +788,8 @@
                         <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
                         <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
                     </div>
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn" onclick="createVariableTemplate()" style="background: #667eea; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">🔧 建立變數模板</button>
-                        <button class="btn" onclick="toggleVariableMode()" id="variable-mode-btn" style="background: #f8f9fa; color: #666; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; font-size: 12px;">🎯 變數模式</button>
+                    <div>
+                        <button class="btn" onclick="showVariableReference()" style="background: #667eea; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 100%;">📋 變數參考表</button>
                     </div>
                 </div>
             </div>
@@ -670,70 +797,33 @@
                 <!-- 動態載入模板列表 -->
             </div>
             
-            <!-- 變數管理浮動面板 -->
-            <div id="variable-panel" class="variable-floating-panel" style="display: none;">
+            <!-- 變數參考表浮動面板 -->
+            <div id="variable-reference-panel" class="variable-floating-panel" style="display: none;">
                 <div class="variable-panel-header">
-                    <h4>🎯 變數管理</h4>
-                    <button onclick="closeVariablePanel()" style="background: none; border: none; font-size: 16px; cursor: pointer;">×</button>
+                    <h4>📋 變數參考表</h4>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button onclick="togglePreviewMode()" id="preview-mode-btn" class="preview-toggle-btn">👁️ 預覽</button>
+                        <button onclick="closeVariablePanel()" style="background: none; border: none; font-size: 16px; cursor: pointer;">×</button>
+                    </div>
                 </div>
                 <div class="variable-panel-content">
-                    <!-- 基本變數 -->
-                    <div class="variable-section-title">📝 基本資訊</div>
-                    <div class="variable-row">
-                        <label>專案名稱</label>
-                        <div class="variable-input-group">
-                            <input type="text" id="var-project-name" placeholder="輸入專案名稱" onchange="updateVariables()">
-                            <button onclick="insertVariable('project_name')" class="insert-var-btn">{x}</button>
+                    <div class="variable-reference-table">
+                        <div class="table-header">
+                            <div class="table-header-cell">名稱</div>
+                            <div class="table-header-cell">代碼</div>
+                            <div class="table-header-cell">範例/預覽</div>
+                            <div class="table-header-cell">操作</div>
                         </div>
-                    </div>
-                    <div class="variable-row">
-                        <label>總進度</label>
-                        <div class="variable-input-group">
-                            <input type="text" id="var-total-progress" placeholder="例: 78%" onchange="updateVariables()">
-                            <button onclick="insertVariable('total_progress')" class="insert-var-btn">{x}</button>
-                        </div>
-                    </div>
-                    <div class="variable-row">
-                        <label>負責人</label>
-                        <div class="variable-input-group">
-                            <input type="text" id="var-manager" placeholder="輸入負責人姓名" onchange="updateVariables()">
-                            <button onclick="insertVariable('manager')" class="insert-var-btn">{x}</button>
-                        </div>
-                    </div>
-                    <div class="variable-row">
-                        <label>日期</label>
-                        <div class="variable-input-group">
-                            <input type="date" id="var-date" onchange="updateVariables()">
-                            <button onclick="insertVariable('date')" class="insert-var-btn">{x}</button>
+                        <div id="variable-reference-rows">
+                            <!-- 動態生成變數參考行 -->
                         </div>
                     </div>
                     
-                    <!-- 進階變數 -->
-                    <div class="variable-section-title">🏗️ 棟別進度</div>
-                    <div class="building-progress-editor">
-                        <div class="table-editor-header">
-                            <button onclick="addBuildingRow()" class="add-row-btn">+ 新增棟別</button>
-                        </div>
-                        <div id="building-progress-table" class="table-editor">
-                            <!-- 動態生成表格 -->
-                        </div>
-                    </div>
-                    
-                    <div class="variable-section-title">📅 今日進度</div>
-                    <div class="today-progress-editor">
-                        <div class="table-editor-header">
-                            <button onclick="addTodayProgressRow()" class="add-row-btn">+ 新增進度</button>
-                        </div>
-                        <div id="today-progress-table" class="table-editor">
-                            <!-- 動態生成表格 -->
-                        </div>
-                    </div>
-                    
-                    <div class="variable-row">
-                        <label>工作日誌</label>
-                        <div class="variable-input-group">
-                            <textarea id="var-work-log" placeholder="輸入今日工作摘要" onchange="updateVariables()" style="resize: vertical;"></textarea>
-                            <button onclick="insertVariable('work_log')" class="insert-var-btn">{x}</button>
+                    <!-- 變數值編輯區 -->
+                    <div class="variable-values-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e8ed;">
+                        <h5 style="margin-bottom: 15px; color: #333;">🔧 編輯變數值</h5>
+                        <div id="variable-value-editors">
+                            <!-- 動態生成變數值編輯器 -->
                         </div>
                     </div>
                 </div>
@@ -2424,6 +2514,135 @@
                 console.error('載入模板錯誤:', error);
                 alert('載入模板時發生錯誤');
             }
+        }
+
+        // 變數參考表相關函數
+        let isPreviewMode = false;
+        let currentVariables = [
+            {
+                name: '專案名稱',
+                code: 'project_name',
+                preview: '勝美-建功段'
+            },
+            {
+                name: '棟別進度',
+                code: 'building_progress',
+                preview: 'A棟 95%, B棟 80%'
+            },
+            {
+                name: '今日進度',
+                code: 'today_progress',
+                preview: '鋼筋綁紮完成'
+            },
+            {
+                name: '聯絡電話',
+                code: 'contact_phone',
+                preview: '02-1234-5678'
+            },
+            {
+                name: '案場地址',
+                code: 'site_address',
+                preview: '台北市信義區建功路123號'
+            },
+            {
+                name: '完工日期',
+                code: 'completion_date',
+                preview: '2024年12月'
+            }
+        ];
+
+        function showVariableReference() {
+            const panel = document.getElementById('variable-reference-panel');
+            panel.style.display = 'block';
+            renderVariableReferenceTable();
+        }
+
+        function hideVariableReference() {
+            document.getElementById('variable-reference-panel').style.display = 'none';
+        }
+
+        function renderVariableReferenceTable() {
+            const tableContainer = document.querySelector('.variable-reference-table');
+            let tableHtml = `
+                <div class="table-header">
+                    <div class="table-header-cell">名稱</div>
+                    <div class="table-header-cell">代碼</div>
+                    <div class="table-header-cell">範例/預覽</div>
+                    <div class="table-header-cell">操作</div>
+                </div>
+            `;
+
+            currentVariables.forEach((variable, index) => {
+                const displayValue = isPreviewMode ? variable.preview : `{{${variable.code}}}`;
+                tableHtml += `
+                    <div class="table-row">
+                        <div class="table-cell">${variable.name}</div>
+                        <div class="table-cell code-cell">${variable.code}</div>
+                        <div class="table-cell preview-cell">${displayValue}</div>
+                        <div class="table-cell action-cell">
+                            <button class="copy-btn" onclick="copyVariable('${variable.code}')" title="複製變數代碼">
+                                📋 複製
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tableContainer.innerHTML = tableHtml;
+        }
+
+        function copyVariable(code) {
+            const variableText = `{{${code}}}`;
+            navigator.clipboard.writeText(variableText).then(() => {
+                showToast(`變數 {{${code}}} 已複製到剪貼簿！`);
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                // 備用方案
+                const textArea = document.createElement('textarea');
+                textArea.value = variableText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast(`變數 {{${code}}} 已複製到剪貼簿！`);
+            });
+        }
+
+        function togglePreviewMode() {
+            isPreviewMode = !isPreviewMode;
+            const button = document.getElementById('preview-mode-btn');
+            button.textContent = isPreviewMode ? '💻 代碼' : '👁️ 預覽';
+            button.title = isPreviewMode ? '切換到代碼模式' : '切換到預覽模式';
+            renderVariableReferenceTable();
+        }
+
+        function showToast(message) {
+            // 移除現有的 toast
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // 建立新的 toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // 顯示動畫
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // 3秒後隱藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
         }
 
         // 頁面載入時初始化
