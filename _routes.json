@@ -1,7 +1,22 @@
 {
   "version": 1,
   "include": [
-    "/api/*"
+    "/api/*",
+    "/admin",
+    "/management",
+    "/health",
+    "/webhook",
+    "/flex-simple-editor",
+    "/flex-editor",
+    "/templates",
+    "/liff-share"
   ],
-  "exclude": []
+  "exclude": [
+    "/flex-carousel-editor.html",
+    "/index.html",
+    "/*.png",
+    "/*.jpg",
+    "/*.css",
+    "/*.js"
+  ]
 }
