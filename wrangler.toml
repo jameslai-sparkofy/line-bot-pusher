@@ -75,3 +75,27 @@ database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
 [[env.preview.r2_buckets]]
 bucket_name = "line-bot-images"
 binding = "R2_IMAGES"
+
+# 開發環境 (對應 develop 分支)
+[env.develop.vars]
+NODE_ENV = "development"
+PORT = "8787"
+MAX_PUSH_RATE = "500"
+MAX_MESSAGE_LENGTH = "2000"
+LOG_LEVEL = "debug"
+
+# 開發環境使用相同的資料庫
+[[env.develop.d1_databases]]
+binding = "LINE_BOT_DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+[[env.develop.d1_databases]]
+binding = "DB"
+database_name = "line-bot-database"
+database_id = "1e5d0326-41d7-4621-864d-b0c1ed49adcd"
+
+# 開發環境使用相同的 R2 存儲
+[[env.develop.r2_buckets]]
+bucket_name = "line-bot-images"
+binding = "R2_IMAGES"
