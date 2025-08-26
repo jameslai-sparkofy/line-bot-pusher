@@ -3,15 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Editor System</title>
-    <script>
-        // 自動重定向到 Flex Carousel Editor
-        window.location.href = './flex-carousel-editor.html';
-    </script>
+    <title>LINE Bot 管理系統</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+        .title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .nav-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+            display: block;
+        }
+        .nav-card:hover {
+            transform: translateY(-5px);
+            text-decoration: none;
+            color: white;
+        }
+        .nav-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .nav-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .nav-desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
-    <h1>Template Editor System</h1>
-    <p>正在重定向到 Flex Carousel Editor...</p>
-    <p><a href="./flex-carousel-editor.html">如果沒有自動重定向，請點擊這裡</a></p>
+    <div class="container">
+        <h1 class="title">🤖 LINE Bot 管理系統</h1>
+        <p class="subtitle">選擇要使用的功能模組</p>
+        
+        <div class="nav-grid">
+            <a href="./management" class="nav-card">
+                <span class="nav-icon">🔧</span>
+                <div class="nav-title">完整管理後台</div>
+                <div class="nav-desc">用戶管理、群組管理、訊息記錄、模板管理等</div>
+            </a>
+            
+            <a href="./admin" class="nav-card">
+                <span class="nav-icon">📊</span>
+                <div class="nav-title">簡易管理後台</div>
+                <div class="nav-desc">群組管理、推送訊息測試</div>
+            </a>
+            
+            <a href="./flex-carousel-editor.html" class="nav-card">
+                <span class="nav-icon">🏗️</span>
+                <div class="nav-title">房地產編輯器</div>
+                <div class="nav-desc">Flex Carousel 模板編輯（含變數功能）</div>
+            </a>
+            
+            <a href="./flex-simple-editor" class="nav-card">
+                <span class="nav-icon">🎨</span>
+                <div class="nav-title">簡易模板編輯</div>
+                <div class="nav-desc">基本 Flex Message 編輯器</div>
+            </a>
+        </div>
+        
+        <div style="margin-top: 40px; color: #666; font-size: 14px;">
+            <p>🔗 API 端點：<code>/api/*</code> | 健康檢查：<code>/health</code></p>
+        </div>
+    </div>
 </body>
 </html>
