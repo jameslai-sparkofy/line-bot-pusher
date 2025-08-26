@@ -1,11 +1,4 @@
-// Flex Carousel 專業編輯器 - 房地產專用
-export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const templateId = url.searchParams.get('id');
-  const categoryId = url.searchParams.get('category') || 'construction_progress';
-
-  const flexCarouselEditorHtml = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -1058,7 +1051,7 @@ export async function onRequest(context) {
             let dateContent = bubble.body.contents.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
             
             if (!dateContent && text) {
-                // 如果不存在日期資訊元素，在最��創建一個
+                // 如果不存在日期資訊元素，在最後創建一個
                 dateContent = {
                     "type": "text",
                     "text": text,
@@ -1551,9 +1544,4 @@ export async function onRequest(context) {
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-</html>`;
-
-  return new Response(flexCarouselEditorHtml, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' }
-  });
-}
+</html>
