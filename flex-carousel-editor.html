@@ -883,7 +883,7 @@
     <!-- 頭部工具列 -->
     <div class="editor-header">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <a href="./management" style="color: #667eea; text-decoration: none; font-size: 14px;">← 返回管理頁面</a>
+            <a href="./management" style="color: #667eea; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 6px; background: rgba(102, 126, 234, 0.1); transition: background 0.2s;" onmouseover="this.style.background='rgba(102, 126, 234, 0.2)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.1)'">← 返回管理頁面</a>
             <div class="editor-title" id="editor-title" onclick="editTemplateTitle()" style="cursor: pointer;">🏗️ Flex Carousel 編輯器</div>
         </div>
         <div class="editor-actions">
@@ -2429,20 +2429,27 @@
                 
                 // 特殊處理棟別進度
                 if (variable.code === 'building_progress' && context.isBuildingContext) {
-                    try {
-                        const buildingData = JSON.parse(variable.defaultValue);
-                        if (Array.isArray(buildingData) && context.buildingIndex !== undefined) {
-                            const building = buildingData[context.buildingIndex];
-                            if (building) {
-                                if (context.isNameField) {
-                                    result = result.replace(pattern, building.name);
-                                } else if (context.isProgressField) {
-                                    result = result.replace(pattern, building.progress);
-                                }
+                    // 解析文字格式：A棟 95% B棟 80% C棟 60%
+                    const buildingText = variable.defaultValue;
+                    const buildingMatches = buildingText.match(/(\S+棟)\s+(\d+%)/g) || [];
+                    const buildings = buildingMatches.map(match => {
+                        const parts = match.trim().split(/\s+/);
+                        return {
+                            name: parts[0],
+                            progress: parts[1] || '0%'
+                        };
+                    });
+                    
+                    if (buildings.length > 0 && context.buildingIndex !== undefined) {
+                        const building = buildings[context.buildingIndex];
+                        if (building) {
+                            if (context.isNameField) {
+                                result = result.replace(pattern, building.name);
+                            } else if (context.isProgressField) {
+                                result = result.replace(pattern, building.progress);
                             }
                         }
-                    } catch (e) {
-                        // 如果JSON解析失敗，使用原始值
+                    } else {
                         result = result.replace(pattern, variable.defaultValue);
                     }
                 } else {
@@ -2663,8 +2670,8 @@
             {
                 name: '棟別進度',
                 code: 'building_progress',
-                defaultValue: '[{"name":"A棟","progress":"95%"},{"name":"B棟","progress":"80%"}]',
-                description: '各棟別施工進度 (JSON格式)'
+                defaultValue: 'A棟 95% B棟 80% C棟 60%',
+                description: '各棟別施工進度'
             },
             {
                 name: '今日進度',
