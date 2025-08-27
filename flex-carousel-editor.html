@@ -764,12 +764,128 @@
         .toast.error {
             background: #dc3545;
         }
+
+        /* 面板分頁樣式 */
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #e1e8ed;
+            background: #f8f9fa;
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .panel-tab:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .panel-tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .panel-content {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* 變數管理樣式 */
+        .variables-container {
+            height: 100%;
+        }
+
+        .variables-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .variable-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .variable-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .variable-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .variable-code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #667eea;
+        }
+
+        .variable-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+
+        .variable-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .copy-variable-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-variable-btn:hover {
+            background: #5a6fd8;
+        }
     </style>
 </head>
 <body>
     <!-- 頭部工具列 -->
     <div class="editor-header">
-        <div class="editor-title" id="editor-title" onclick="editTemplateTitle()" style="cursor: pointer;">🏗️ Flex Carousel 編輯器</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="./management" style="color: #667eea; text-decoration: none; font-size: 14px;">← 返回管理頁面</a>
+            <div class="editor-title" id="editor-title" onclick="editTemplateTitle()" style="cursor: pointer;">🏗️ Flex Carousel 編輯器</div>
+        </div>
         <div class="editor-actions">
             <button class="btn" onclick="showJsonPreview()">📝 檢視 JSON</button>
             <button class="btn btn-primary" onclick="window.close()">✕ 關閉</button>
@@ -778,53 +894,34 @@
 
     <!-- 主要編輯區域 -->
     <div class="editor-main">
-        <!-- 左側模板面板 -->
+        <!-- 左側管理面板 -->
         <div class="template-panel">
-            <!-- 模板管理區 -->
-            <div class="panel-header">
-                <div class="panel-title">📋 模板管理</div>
-                <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
-                        <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
-                    </div>
-                    <div>
-                        <button class="btn" onclick="showVariableReference()" style="background: #667eea; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 100%;">📋 變數參考表</button>
-                    </div>
-                </div>
-            </div>
-            <div class="template-list" id="template-list">
-                <!-- 動態載入模板列表 -->
+            <!-- 分頁標籤 -->
+            <div class="panel-tabs">
+                <button class="panel-tab active" onclick="switchPanelTab('templates')" id="tab-templates">📋 模板管理</button>
+                <button class="panel-tab" onclick="switchPanelTab('variables')" id="tab-variables">🎯 變數管理</button>
             </div>
             
-            <!-- 變數參考表浮動面板 -->
-            <div id="variable-reference-panel" class="variable-floating-panel" style="display: none;">
-                <div class="variable-panel-header">
-                    <h4>📋 變數參考表</h4>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button onclick="togglePreviewMode()" id="preview-mode-btn" class="preview-toggle-btn">👁️ 預覽</button>
-                        <button onclick="closeVariablePanel()" style="background: none; border: none; font-size: 16px; cursor: pointer;">×</button>
-                    </div>
+            <!-- 模板管理分頁 -->
+            <div class="panel-content" id="panel-templates">
+                <div class="panel-actions">
+                    <button class="btn" onclick="addNewTemplate()" style="background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">+ 新增</button>
+                    <button class="btn" onclick="saveTemplate()" style="background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px;">💾 儲存</button>
                 </div>
-                <div class="variable-panel-content">
-                    <div class="variable-reference-table">
-                        <div class="table-header">
-                            <div class="table-header-cell">名稱</div>
-                            <div class="table-header-cell">代碼</div>
-                            <div class="table-header-cell">範例/預覽</div>
-                            <div class="table-header-cell">操作</div>
-                        </div>
-                        <div id="variable-reference-rows">
-                            <!-- 動態生成變數參考行 -->
-                        </div>
+                <div class="template-list" id="template-list">
+                    <!-- 動態載入模板列表 -->
+                </div>
+            </div>
+            
+            <!-- 變數管理分頁 -->
+            <div class="panel-content" id="panel-variables" style="display: none;">
+                <div class="variables-container">
+                    <div class="variables-header">
+                        <h4 style="margin: 0 0 15px 0; color: #333;">🎯 變數管理</h4>
+                        <p style="color: #666; font-size: 12px; margin-bottom: 20px;">設定變數預設值，模板預覽會自動代入這些值</p>
                     </div>
-                    
-                    <!-- 變數值編輯區 -->
-                    <div class="variable-values-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e8ed;">
-                        <h5 style="margin-bottom: 15px; color: #333;">🔧 編輯變數值</h5>
-                        <div id="variable-value-editors">
-                            <!-- 動態生成變數值編輯器 -->
-                        </div>
+                    <div class="variables-list" id="variables-list">
+                        <!-- 動態載入變數列表 -->
                     </div>
                 </div>
             </div>
@@ -2347,6 +2444,19 @@
         }
 
         // 更新預覽
+        // 變數替換函數
+        function replaceVariables(text) {
+            if (!text || typeof text !== 'string') return text;
+            
+            let result = text;
+            currentVariables.forEach(variable => {
+                const pattern = new RegExp(`{{${variable.code}}}`, 'g');
+                result = result.replace(pattern, variable.defaultValue);
+            });
+            
+            return result;
+        }
+
         function updatePreview() {
             const container = document.getElementById('carousel-preview');
             let html = '';
@@ -2355,7 +2465,7 @@
                 const hero = bubble.hero;
                 const body = bubble.body?.contents || [];
                 const titleContent = body.find(c => c.type === 'text' && c.weight === 'bold');
-                const title = titleContent?.text || '分頁 ' + (index + 1);
+                const title = replaceVariables(titleContent?.text) || '分頁 ' + (index + 1);
                 const buildingBox = body.find(c => c.type === 'box' && c.layout === 'vertical' && c.spacing === 'sm');
                 const dateContent = body.find(c => c.type === 'text' && c.color === '#aaaaaa' && c.size === 'xs');
                 const buttons = bubble.footer?.contents || [];
@@ -2376,7 +2486,7 @@
                 // 副標題
                 const subtitleContent = body.find(c => c.type === 'text' && c !== body[0] && c.color !== '#aaaaaa' && c.size !== 'xs' && !c.wrap);
                 if (subtitleContent?.text) {
-                    html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + subtitleContent.text + '</div>';
+                    html += '<div style="font-size: 12px; color: #666; margin-top: 4px;">' + replaceVariables(subtitleContent.text) + '</div>';
                 }
                 
                 // 棟別資訊
@@ -2384,8 +2494,8 @@
                     html += '<div style="margin: 8px 0;">';
                     buildingBox.contents.forEach(building => {
                         if (building.type === 'box' && building.layout === 'baseline') {
-                            const buildingName = building.contents.find(c => c.type === 'text' && c.weight === 'bold')?.text || '';
-                            const percentage = building.contents.find(c => c.type === 'text' && c.align === 'end')?.text || '';
+                            const buildingName = replaceVariables(building.contents.find(c => c.type === 'text' && c.weight === 'bold')?.text) || '';
+                            const percentage = replaceVariables(building.contents.find(c => c.type === 'text' && c.align === 'end')?.text) || '';
                             html += '<div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">';
                             html += '<span style="font-weight: bold;">' + buildingName + '</span>';
                             html += '<span style="color: #aaa;">' + percentage + '</span>';
@@ -2398,12 +2508,12 @@
                 // 下方內容
                 const bottomContent = body.find(c => c.type === 'text' && c.wrap === true);
                 if (bottomContent?.text) {
-                    html += '<div style="font-size: 11px; color: #555; margin-top: 6px; line-height: 1.3;">' + bottomContent.text + '</div>';
+                    html += '<div style="font-size: 11px; color: #555; margin-top: 6px; line-height: 1.3;">' + replaceVariables(bottomContent.text) + '</div>';
                 }
                 
                 // 日期資訊
                 if (dateContent?.text) {
-                    html += '<div style="font-size: 11px; color: #aaa; margin-top: 8px;">' + dateContent.text + '</div>';
+                    html += '<div style="font-size: 11px; color: #aaa; margin-top: 8px;">' + replaceVariables(dateContent.text) + '</div>';
                 }
                 
                 html += '</div>';
@@ -2414,7 +2524,8 @@
                     buttons.forEach((btn, btnIndex) => {
                         const btnClass = btn.style === 'primary' ? 'bubble-button' : 'bubble-button secondary';
                         const btnStyle = btn.color ? 'background-color: ' + btn.color + ';' : '';
-                        html += '<button class="' + btnClass + '" style="' + btnStyle + '">' + (btn.action?.label || '按鈕') + '</button>';
+                        const buttonLabel = replaceVariables(btn.action?.label) || '按鈕';
+                        html += '<button class="' + btnClass + '" style="' + btnStyle + '">' + buttonLabel + '</button>';
                     });
                     html += '</div>';
                 }
@@ -2516,82 +2627,99 @@
             }
         }
 
-        // 變數參考表相關函數
-        let isPreviewMode = false;
+        // 分頁切換功能
+        function switchPanelTab(tabName) {
+            // 更新標籤狀態
+            document.querySelectorAll('.panel-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // 更新內容顯示
+            document.querySelectorAll('.panel-content').forEach(content => content.style.display = 'none');
+            document.getElementById('panel-' + tabName).style.display = 'block';
+            
+            if (tabName === 'variables') {
+                renderVariablesList();
+            }
+        }
+
+        // 變數管理相關函數
         let currentVariables = [
             {
                 name: '專案名稱',
                 code: 'project_name',
-                preview: '勝美-建功段'
+                defaultValue: '勝美-建功段',
+                description: '建案專案名稱'
             },
             {
                 name: '棟別進度',
                 code: 'building_progress',
-                preview: 'A棟 95%, B棟 80%'
+                defaultValue: 'A棟 95%, B棟 80%',
+                description: '各棟別施工進度'
             },
             {
                 name: '今日進度',
                 code: 'today_progress',
-                preview: '鋼筋綁紮完成'
+                defaultValue: '鋼筋綁紮完成',
+                description: '當日工作進度'
             },
             {
                 name: '聯絡電話',
                 code: 'contact_phone',
-                preview: '02-1234-5678'
+                defaultValue: '02-1234-5678',
+                description: '案場聯絡電話'
             },
             {
                 name: '案場地址',
                 code: 'site_address',
-                preview: '台北市信義區建功路123號'
+                defaultValue: '台北市信義區建功路123號',
+                description: '建案地址'
             },
             {
                 name: '完工日期',
                 code: 'completion_date',
-                preview: '2024年12月'
+                defaultValue: '2024年12月',
+                description: '預計完工日期'
             }
         ];
 
-        function showVariableReference() {
-            const panel = document.getElementById('variable-reference-panel');
-            panel.style.display = 'block';
-            renderVariableReferenceTable();
-        }
-
-        function hideVariableReference() {
-            document.getElementById('variable-reference-panel').style.display = 'none';
-        }
-
-        function renderVariableReferenceTable() {
-            const tableContainer = document.querySelector('.variable-reference-table');
-            let tableHtml = `
-                <div class="table-header">
-                    <div class="table-header-cell">名稱</div>
-                    <div class="table-header-cell">代碼</div>
-                    <div class="table-header-cell">範例/預覽</div>
-                    <div class="table-header-cell">操作</div>
-                </div>
-            `;
-
+        function renderVariablesList() {
+            const container = document.getElementById('variables-list');
+            let html = '';
+            
             currentVariables.forEach((variable, index) => {
-                const displayValue = isPreviewMode ? variable.preview : `{{${variable.code}}}`;
-                tableHtml += `
-                    <div class="table-row">
-                        <div class="table-cell">${variable.name}</div>
-                        <div class="table-cell code-cell">${variable.code}</div>
-                        <div class="table-cell preview-cell">${displayValue}</div>
-                        <div class="table-cell action-cell">
-                            <button class="copy-btn" onclick="copyVariable('${variable.code}')" title="複製變數代碼">
+                html += `
+                    <div class="variable-item">
+                        <div class="variable-item-header">
+                            <div>
+                                <span class="variable-name">${variable.name}</span>
+                                <span class="variable-code">{{${variable.code}}}</span>
+                            </div>
+                            <button class="copy-variable-btn" onclick="copyVariableCode('${variable.code}')" title="複製變數代碼">
                                 📋 複製
                             </button>
                         </div>
+                        <input type="text" 
+                               class="variable-input" 
+                               value="${variable.defaultValue}"
+                               placeholder="${variable.description}"
+                               onchange="updateVariableValue('${variable.code}', this.value)"
+                               id="var-${variable.code}">
                     </div>
                 `;
             });
-
-            tableContainer.innerHTML = tableHtml;
+            
+            container.innerHTML = html;
         }
 
-        function copyVariable(code) {
+        function updateVariableValue(code, value) {
+            const variable = currentVariables.find(v => v.code === code);
+            if (variable) {
+                variable.defaultValue = value;
+                updatePreview(); // 更新預覽，套用新的變數值
+            }
+        }
+
+        function copyVariableCode(code) {
             const variableText = `{{${code}}}`;
             navigator.clipboard.writeText(variableText).then(() => {
                 showToast(`變數 {{${code}}} 已複製到剪貼簿！`);
@@ -2606,14 +2734,6 @@
                 document.body.removeChild(textArea);
                 showToast(`變數 {{${code}}} 已複製到剪貼簿！`);
             });
-        }
-
-        function togglePreviewMode() {
-            isPreviewMode = !isPreviewMode;
-            const button = document.getElementById('preview-mode-btn');
-            button.textContent = isPreviewMode ? '💻 代碼' : '👁️ 預覽';
-            button.title = isPreviewMode ? '切換到代碼模式' : '切換到預覽模式';
-            renderVariableReferenceTable();
         }
 
         function showToast(message) {
