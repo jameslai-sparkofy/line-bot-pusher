@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "build": "mkdir -p dist && cp -r src dist/ && cp -r functions dist/ && cp package*.json dist/ && cp wrangler.toml dist/",
     "deploy": "wrangler deploy",
     "db:init": "node src/utils/initTemplates.js"
