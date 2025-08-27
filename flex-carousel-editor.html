@@ -1984,31 +1984,6 @@
             html += '</div>';
             html += '</div>';
             
-            // 棟別資料設定
-            html += '<div class="form-section">';
-            html += '<div class="section-title"><span class="section-icon">🏢</span>棟別資料設定</div>';
-            if (buildingBox?.contents) {
-                buildingBox.contents.forEach((building, index) => {
-                    if (building.type === 'box' && building.layout === 'baseline') {
-                        const buildingName = building.contents.find(c => c.type === 'text' && c.weight === 'bold')?.text || '';
-                        const percentage = building.contents.find(c => c.type === 'text' && c.align === 'end')?.text || '';
-                        
-                        html += '<div class="form-group" style="border: 1px solid #e1e8ed; padding: 10px; margin-bottom: 10px; border-radius: 4px;">';
-                        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
-                        html += '<label class="form-label" style="margin-bottom: 0;">棟別 ' + (index + 1) + '</label>';
-                        html += '<button type="button" class="template-delete-btn" onclick="removeBuilding(' + index + ')" style="font-size: 12px; padding: 2px 8px;">刪除</button>';
-                        html += '</div>';
-                        html += '<div style="display: flex; gap: 10px;">';
-                        html += '<input type="text" class="form-input" value="' + buildingName + '" onchange="updateBuildingName(' + index + ', this.value)" placeholder="例：A棟" style="flex: 1;">';
-                        html += '<input type="text" class="form-input" value="' + percentage + '" onchange="updateBuildingPercentage(' + index + ', this.value)" placeholder="例：95%" style="flex: 1;">';
-                        html += '</div>';
-                        html += '</div>';
-                    }
-                });
-            }
-            html += '<button type="button" class="btn" onclick="addBuilding()" style="background: #28a745; color: white;">+ 新增棟別</button>';
-            html += '</div>';
-            
             // 按鈕設定
             const buttons = bubble.footer?.contents || [];
             html += '<div class="form-section">';
@@ -2445,13 +2420,34 @@
 
         // 更新預覽
         // 變數替換函數
-        function replaceVariables(text) {
+        function replaceVariables(text, context = {}) {
             if (!text || typeof text !== 'string') return text;
             
             let result = text;
             currentVariables.forEach(variable => {
                 const pattern = new RegExp(`{{${variable.code}}}`, 'g');
-                result = result.replace(pattern, variable.defaultValue);
+                
+                // 特殊處理棟別進度
+                if (variable.code === 'building_progress' && context.isBuildingContext) {
+                    try {
+                        const buildingData = JSON.parse(variable.defaultValue);
+                        if (Array.isArray(buildingData) && context.buildingIndex !== undefined) {
+                            const building = buildingData[context.buildingIndex];
+                            if (building) {
+                                if (context.isNameField) {
+                                    result = result.replace(pattern, building.name);
+                                } else if (context.isProgressField) {
+                                    result = result.replace(pattern, building.progress);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // 如果JSON解析失敗，使用原始值
+                        result = result.replace(pattern, variable.defaultValue);
+                    }
+                } else {
+                    result = result.replace(pattern, variable.defaultValue);
+                }
             });
             
             return result;
@@ -2492,10 +2488,24 @@
                 // 棟別資訊
                 if (buildingBox?.contents) {
                     html += '<div style="margin: 8px 0;">';
-                    buildingBox.contents.forEach(building => {
+                    buildingBox.contents.forEach((building, buildingIndex) => {
                         if (building.type === 'box' && building.layout === 'baseline') {
-                            const buildingName = replaceVariables(building.contents.find(c => c.type === 'text' && c.weight === 'bold')?.text) || '';
-                            const percentage = replaceVariables(building.contents.find(c => c.type === 'text' && c.align === 'end')?.text) || '';
+                            const buildingNameText = building.contents.find(c => c.type === 'text' && c.weight === 'bold')?.text || '';
+                            const percentageText = building.contents.find(c => c.type === 'text' && c.align === 'end')?.text || '';
+                            
+                            // 使用context來處理棟別進度變數
+                            const buildingName = replaceVariables(buildingNameText, {
+                                isBuildingContext: true,
+                                buildingIndex: buildingIndex,
+                                isNameField: true
+                            });
+                            
+                            const percentage = replaceVariables(percentageText, {
+                                isBuildingContext: true,
+                                buildingIndex: buildingIndex,
+                                isProgressField: true
+                            });
+                            
                             html += '<div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">';
                             html += '<span style="font-weight: bold;">' + buildingName + '</span>';
                             html += '<span style="color: #aaa;">' + percentage + '</span>';
@@ -2653,8 +2663,8 @@
             {
                 name: '棟別進度',
                 code: 'building_progress',
-                defaultValue: 'A棟 95%, B棟 80%',
-                description: '各棟別施工進度'
+                defaultValue: '[{"name":"A棟","progress":"95%"},{"name":"B棟","progress":"80%"}]',
+                description: '各棟別施工進度 (JSON格式)'
             },
             {
                 name: '今日進度',
@@ -2663,22 +2673,22 @@
                 description: '當日工作進度'
             },
             {
+                name: '案場負責人',
+                code: 'site_manager',
+                defaultValue: '王建築師',
+                description: '案場負責人姓名'
+            },
+            {
                 name: '聯絡電話',
                 code: 'contact_phone',
                 defaultValue: '02-1234-5678',
                 description: '案場聯絡電話'
             },
             {
-                name: '案場地址',
-                code: 'site_address',
-                defaultValue: '台北市信義區建功路123號',
-                description: '建案地址'
-            },
-            {
-                name: '完工日期',
-                code: 'completion_date',
-                defaultValue: '2024年12月',
-                description: '預計完工日期'
+                name: '今天日期',
+                code: 'today_date',
+                defaultValue: new Date().toLocaleDateString('zh-TW'),
+                description: '今天的日期'
             }
         ];
 
