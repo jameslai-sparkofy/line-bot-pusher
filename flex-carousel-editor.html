@@ -883,7 +883,7 @@
     <!-- 頭部工具列 -->
     <div class="editor-header">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <a href="./management" style="color: #667eea; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 6px; background: rgba(102, 126, 234, 0.1); transition: background 0.2s;" onmouseover="this.style.background='rgba(102, 126, 234, 0.2)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.1)'">← 返回管理頁面</a>
+            <a href="./management" style="color: white; text-decoration: none; font-size: 14px; font-weight: bold; padding: 10px 16px; border-radius: 8px; background: #667eea; border: 2px solid #667eea; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.background='#5a67d8'; this.style.borderColor='#5a67d8'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#667eea'; this.style.borderColor='#667eea'; this.style.transform='translateY(0)'">← 返回管理頁面</a>
             <div class="editor-title" id="editor-title" onclick="editTemplateTitle()" style="cursor: pointer;">🏗️ Flex Carousel 編輯器</div>
         </div>
         <div class="editor-actions">
@@ -1198,14 +1198,14 @@
                                     },
                                     {
                                         "type": "text",
-                                        "text": "B棟",
+                                        "text": "{{building_progress}}",
                                         "weight": "bold",
                                         "margin": "sm",
                                         "flex": 0
                                     },
                                     {
                                         "type": "text",
-                                        "text": "80%",
+                                        "text": "{{building_progress}}",
                                         "size": "sm",
                                         "align": "end",
                                         "color": "#aaaaaa"
@@ -2513,9 +2513,9 @@
                                 isProgressField: true
                             });
                             
-                            html += '<div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">';
-                            html += '<span style="font-weight: bold;">' + buildingName + '</span>';
-                            html += '<span style="color: #aaa;">' + percentage + '</span>';
+                            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 6px 0; font-size: 15px; border-bottom: 1px solid #f0f0f0;">';
+                            html += '<span style="font-weight: bold; color: #333;">' + buildingName + '</span>';
+                            html += '<span style="font-weight: bold; color: #667eea; text-align: right;">' + percentage + '</span>';
                             html += '</div>';
                         }
                     });
